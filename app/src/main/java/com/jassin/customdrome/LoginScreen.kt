@@ -16,28 +16,34 @@ import androidx.compose.material3.Surface
 import androidx.compose.foundation.layout.safeDrawingPadding
 
 @Composable
-fun LoginScreen() {
+fun LoginScreen(onBack: () -> Unit) {
     CustomDromeTheme {
         // responsible for the themed bg color
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
+            color = MaterialTheme.colorScheme.background,
         ) {
             // prevents overlap with the status bar
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .safeDrawingPadding(),
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .safeDrawingPadding(),
+                contentAlignment = Alignment.Center,
             ) {
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text(
                         text = "Login to CustomDrome",
                         color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.headlineMedium
+                        style = MaterialTheme.typography.headlineMedium,
                     )
+
+                    Button(onClick = { onBack() }) {
+                        // Trigger the back action
+                        Text("Go Back")
+                    }
 
                     Button(onClick = { /* logic goes here */ }) {
                         Text("Login")
