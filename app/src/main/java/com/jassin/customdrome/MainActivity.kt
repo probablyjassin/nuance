@@ -42,7 +42,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@Suppress("ktlint:standard:function-naming")
 @Composable
 fun MainScreen(onNavigateToLogin: () -> Unit) {
     Box(

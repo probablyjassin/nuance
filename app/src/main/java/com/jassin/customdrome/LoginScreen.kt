@@ -1,7 +1,9 @@
 package com.jassin.customdrome
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -46,8 +48,15 @@ fun LoginScreen(onBack: () -> Unit) {
                             .fillMaxSize()
                             .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     var instanceUrl by remember { mutableStateOf("") }
+
+                    Text(
+                        text = "Login to CustomDrome",
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.headlineMedium,
+                    )
 
                     OutlinedTextField(
                         value = instanceUrl,
@@ -63,19 +72,18 @@ fun LoginScreen(onBack: () -> Unit) {
                         },
                     )
 
-                    Text(
-                        text = "Login to CustomDrome",
-                        color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.headlineMedium,
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Button(onClick = { /* logic goes here */ }) {
+                            Text("Login")
+                        }
 
-                    Button(onClick = { onBack() }) {
-                        // Trigger the back action
-                        Text("Go Back")
-                    }
-
-                    Button(onClick = { /* logic goes here */ }) {
-                        Text("Login")
+                        Button(onClick = { onBack() }) {
+                            // Trigger the back action
+                            Text("Go Back")
+                        }
                     }
                 }
             }
