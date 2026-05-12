@@ -37,14 +37,7 @@ fun AppNavigation() {
     Scaffold(
         topBar = {
             if (currentRoute == "home") {
-                CenterAlignedTopAppBar(
-                    title = { Text("CustomDrome") },
-                    actions = {
-                        IconButton(onClick = { navController.navigate("settings") }) {
-                            Icon(Icons.Default.Settings, contentDescription = "Profile")
-                        }
-                    },
-                )
+                TopBar(onGoToSettings = { navController.navigate(route = "settings") })
             }
         },
         bottomBar = {
