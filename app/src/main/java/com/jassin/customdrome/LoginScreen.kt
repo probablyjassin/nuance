@@ -29,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
@@ -46,6 +47,8 @@ fun LoginScreen(
     userPrefs: UserPreferences
 ) {
     CustomDromeTheme {
+        val context = LocalContext.current
+
         val savedName by userPrefs.userName.collectAsState(initial = null)
         val savedServerURL by userPrefs.serverURL.collectAsState(initial = null)
 
@@ -68,6 +71,11 @@ fun LoginScreen(
             scope.launch {
                 userPrefs.saveUsername(tempName)
                 userPrefs.saveServerURL((tempServerURL))
+                android.widget.Toast.makeText(
+                    context,
+                    "Login details saved",
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
             }
             onLogin()
         }
