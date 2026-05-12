@@ -1,4 +1,4 @@
-package com.jassin.customdrome
+package com.jassin.customdrome.tabs
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
