@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -42,18 +41,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.jassin.customdrome.ui.common.TabsBar
 import com.jassin.customdrome.ui.common.TopBar
 import kotlinx.coroutines.launch
+import kotlin.math.pow
 import kotlin.math.roundToInt
 
 // Height constants shared between scaffold and content padding
 private val MiniPlayerHeight = 72.dp
 private val BottomNavHeight = 80.dp
+
+private fun Float.powCurve(exponent: Float): Float =
+    this
+        .coerceIn(0f, 1f)
+        .toDouble()
+        .pow(exponent.toDouble())
+        .toFloat()
 
 @Composable
 fun PlayerScaffold(
@@ -90,12 +96,13 @@ fun PlayerScaffold(
 
         // ── Bottom navigation bar ─────────────────────────────────────────────
         if (showNavBars) {
-            val navYOffsetPx = (expandProgress.value * bottomNavHeightPx).roundToInt()
+            val navEasing = expandProgress.value * 16 * expandProgress.value
+            val navYOffsetPx = (navEasing * bottomNavHeightPx).roundToInt()
             Box(
                 modifier =
                     Modifier
-                        .align(Alignment.BottomCenter)
-                        .offset { IntOffset(0, navYOffsetPx) },
+                        .align(Alignment.BottomCenter),
+                // .offset { IntOffset(0, navYOffsetPx) },
             ) {
                 TabsBar(navController)
             }
@@ -103,9 +110,18 @@ fun PlayerScaffold(
             // ── Player surface ────────────────────────────────────────────────────
             if (isSongPlaying) {
                 val progress = expandProgress.value
-                val playerTopPx = travelPx * (1f - progress)
+                val p = progress // still Float, unchanged
+
+                val topCurve = 1f // 1.0 = linear
+                val heightCurve = 0.72f // < 1 = faster early growth, > 1 = slower early growth
+
+                val topP = p.powCurve(topCurve)
+                val heightP = p.powCurve(heightCurve)
+
+                val playerTopPx = travelPx * (1f - topP)
                 val playerHeightPx =
-                    miniPlayerHeightPx + progress * (screenHeightPx - miniPlayerHeightPx)
+                    miniPlayerHeightPx + heightP * (screenHeightPx - miniPlayerHeightPx)
+
                 val cornerRadius = (16.dp * (1f - progress)).coerceAtLeast(0.dp)
 
                 var startProgress by remember { mutableFloatStateOf(0f) }
@@ -165,7 +181,7 @@ fun PlayerScaffold(
                                 // This defines the visual effect. Setting it to null removes the circle/ripple.
                                 indication = null,
                             ) {
-                                scope.launch { expandProgress.animateTo(1f, tween(60)) }
+                                scope.launch { expandProgress.animateTo(1f, tween(150)) }
                             },
                 )
             }
@@ -214,7 +230,10 @@ fun MiniPlayerContent() {
 }
 
 @Composable
-fun FullPlayerContent(onCollapse: () -> Unit) {
+fun FullPlayerContent(
+    onCollapse: () -> Unit,
+    progress: Float,
+) {
     Column(
         modifier =
             Modifier

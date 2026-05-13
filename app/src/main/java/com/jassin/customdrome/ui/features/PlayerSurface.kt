@@ -64,12 +64,12 @@ fun PlayerSurface(
         // --- Full Player (fades in) ---
         // The cover slot is an invisible Spacer; the floating cover renders on top.
         Box(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .graphicsLayer { alpha = ((progress - 0.5f) * 2f).coerceIn(0f, 1f) },
+            modifier = Modifier.fillMaxSize(),
         ) {
-            FullPlayerContent(onCollapse = onCollapse)
+            FullPlayerContent(
+                onCollapse = onCollapse,
+                progress = ((progress - 0.3f) / 0.7f).coerceIn(0f, 1f),
+            )
         }
 
         // --- Floating album cover ---
