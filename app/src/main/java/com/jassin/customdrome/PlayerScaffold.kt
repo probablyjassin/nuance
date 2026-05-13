@@ -276,11 +276,10 @@ private fun FullPlayerContent(onCollapse: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
-        IconButton(
-            onClick = onCollapse,
-            modifier = Modifier.padding(top = 8.dp),
+        Row(
+            modifier = Modifier.padding(top = 32.dp),
         ) {
-            Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Collapse player")
+            Text("hi")
         }
 
         Box(
