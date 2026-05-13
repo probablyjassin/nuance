@@ -91,84 +91,86 @@ fun PlayerScaffold(
         content(PaddingValues(bottom = BottomNavHeight))
 
         // ── Bottom navigation bar ─────────────────────────────────────────────
-        val navYOffsetPx = (expandProgress.value * bottomNavHeightPx).roundToInt()
-        Box(
-            modifier =
-                Modifier
-                    .align(Alignment.BottomCenter)
-                    .offset { IntOffset(0, navYOffsetPx) },
-        ) {
-            TabsBar(navController)
-        }
-
-        // ── Player surface ────────────────────────────────────────────────────
-        if (isSongPlaying) {
-            val progress = expandProgress.value
-            val playerTopPx = travelPx * (1f - progress)
-            val playerHeightPx =
-                miniPlayerHeightPx + progress * (screenHeightPx - miniPlayerHeightPx)
-            val cornerRadius = (16.dp * (1f - progress)).coerceAtLeast(0.dp)
-
-            var startProgress by remember { mutableFloatStateOf(0f) }
-
-            // Re-register the BackHandler on every navigation change so it always
-            // sits on top of the OnBackPressedDispatcher stack (LIFO wins).
-            val currentEntry by navController.currentBackStackEntryAsState()
-            key(currentEntry) {
-                BackHandler(enabled = expandProgress.value > 0.5f) {
-                    scope.launch { expandProgress.animateTo(0f, tween(300)) }
-                }
-            }
-
-            PlayerSurface(
-                progress = progress,
-                playerHeightPx = playerHeightPx,
-                playerTopPx = playerTopPx,
-                cornerRadius = cornerRadius,
-                onCollapse = {
-                    scope.launch { expandProgress.animateTo(0f, tween(300)) }
-                },
+        if (showNavBars) {
+            val navYOffsetPx = (expandProgress.value * bottomNavHeightPx).roundToInt()
+            Box(
                 modifier =
                     Modifier
-                        .pointerInput(Unit) {
-                            detectVerticalDragGestures(
-                                onDragStart = {
-                                    scope.launch { expandProgress.stop() }
-                                    startProgress = expandProgress.value
-                                },
-                                onVerticalDrag = { change, dragAmount ->
-                                    change.consume()
-                                    val delta = -dragAmount / travelPx
-                                    scope.launch {
-                                        expandProgress.snapTo(
-                                            (expandProgress.value + delta).coerceIn(
-                                                0f,
-                                                1f,
-                                            ),
-                                        )
-                                    }
-                                },
-                                onDragEnd = {
-                                    val target =
-                                        if (expandProgress.value > startProgress) 1f else 0f
-                                    scope.launch {
-                                        expandProgress.animateTo(
-                                            target,
-                                            tween(60, easing = LinearEasing),
-                                        )
-                                    }
-                                },
-                            )
-                        }.clickable(
-                            enabled = progress < 0.5f,
-                            // This tracks the interaction state (press, drag, etc.)
-                            interactionSource = remember { MutableInteractionSource() },
-                            // This defines the visual effect. Setting it to null removes the circle/ripple.
-                            indication = null,
-                        ) {
-                            scope.launch { expandProgress.animateTo(1f, tween(60)) }
-                        },
-            )
+                        .align(Alignment.BottomCenter)
+                        .offset { IntOffset(0, navYOffsetPx) },
+            ) {
+                TabsBar(navController)
+            }
+
+            // ── Player surface ────────────────────────────────────────────────────
+            if (isSongPlaying) {
+                val progress = expandProgress.value
+                val playerTopPx = travelPx * (1f - progress)
+                val playerHeightPx =
+                    miniPlayerHeightPx + progress * (screenHeightPx - miniPlayerHeightPx)
+                val cornerRadius = (16.dp * (1f - progress)).coerceAtLeast(0.dp)
+
+                var startProgress by remember { mutableFloatStateOf(0f) }
+
+                // Re-register the BackHandler on every navigation change so it always
+                // sits on top of the OnBackPressedDispatcher stack (LIFO wins).
+                val currentEntry by navController.currentBackStackEntryAsState()
+                key(currentEntry) {
+                    BackHandler(enabled = expandProgress.value > 0.5f) {
+                        scope.launch { expandProgress.animateTo(0f, tween(300)) }
+                    }
+                }
+
+                PlayerSurface(
+                    progress = progress,
+                    playerHeightPx = playerHeightPx,
+                    playerTopPx = playerTopPx,
+                    cornerRadius = cornerRadius,
+                    onCollapse = {
+                        scope.launch { expandProgress.animateTo(0f, tween(300)) }
+                    },
+                    modifier =
+                        Modifier
+                            .pointerInput(Unit) {
+                                detectVerticalDragGestures(
+                                    onDragStart = {
+                                        scope.launch { expandProgress.stop() }
+                                        startProgress = expandProgress.value
+                                    },
+                                    onVerticalDrag = { change, dragAmount ->
+                                        change.consume()
+                                        val delta = -dragAmount / travelPx
+                                        scope.launch {
+                                            expandProgress.snapTo(
+                                                (expandProgress.value + delta).coerceIn(
+                                                    0f,
+                                                    1f,
+                                                ),
+                                            )
+                                        }
+                                    },
+                                    onDragEnd = {
+                                        val target =
+                                            if (expandProgress.value > startProgress) 1f else 0f
+                                        scope.launch {
+                                            expandProgress.animateTo(
+                                                target,
+                                                tween(60, easing = LinearEasing),
+                                            )
+                                        }
+                                    },
+                                )
+                            }.clickable(
+                                enabled = progress < 0.5f,
+                                // This tracks the interaction state (press, drag, etc.)
+                                interactionSource = remember { MutableInteractionSource() },
+                                // This defines the visual effect. Setting it to null removes the circle/ripple.
+                                indication = null,
+                            ) {
+                                scope.launch { expandProgress.animateTo(1f, tween(60)) }
+                            },
+                )
+            }
         }
     }
 }
