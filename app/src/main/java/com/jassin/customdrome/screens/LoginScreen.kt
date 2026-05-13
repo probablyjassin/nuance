@@ -38,7 +38,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jassin.customdrome.UserPreferences
+import com.jassin.customdrome.models.AuthViewModel
 import kotlinx.coroutines.launch
 
 @Composable
@@ -54,6 +56,7 @@ fun LoginScreen(
 
     var tempName by remember { mutableStateOf("") }
     var tempServerURL by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
 
     LaunchedEffect(savedName, savedServerURL) {
         if (savedName != null) {
@@ -64,6 +67,10 @@ fun LoginScreen(
         }
     }
     val scope = rememberCoroutineScope()
+
+    val authViewModel: AuthViewModel = viewModel() // default construction
+    val authResult by authViewModel.result.collectAsState()
+    val requestText by authViewModel.request.collectAsState()
 
     val keyboardController = LocalSoftwareKeyboardController.current
     val onFinishAction = {
@@ -77,8 +84,9 @@ fun LoginScreen(
                     "Login details saved",
                     Toast.LENGTH_LONG,
                 ).show()
+            authViewModel.login(tempServerURL, tempName, password)
         }
-        onLogin()
+        // onLogin()
     }
 
     // responsible for the themed bg color
@@ -104,7 +112,7 @@ fun LoginScreen(
             ) {
                 // var instanceUrl by remember { mutableStateOf("") }
                 // var username by remember { mutableStateOf("") }
-                var password by remember { mutableStateOf("") }
+                // var password by remember { mutableStateOf("") }
 
                 Text(
                     text = "Login to CustomDrome",
@@ -182,6 +190,23 @@ fun LoginScreen(
                         // Trigger the back action
                         Text("Go Back")
                     }
+                }
+                if (requestText != null) {
+                    Text(
+                        text = "Request:\n$requestText",
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(top = 12.dp),
+                    )
+                }
+                if (authResult != null) {
+                    Text(
+                        text = authResult ?: "",
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                    )
                 }
             }
         }
