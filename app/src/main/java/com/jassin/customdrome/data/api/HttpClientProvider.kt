@@ -17,7 +17,7 @@ object HttpClientProvider {
         HttpClient(OkHttp) {
             engine {
                 config {
-                    // Trust manager that does not validate certificate chains
+                    // don't verify certificates
                     val trustAllCerts =
                         object : X509TrustManager {
                             override fun checkClientTrusted(
@@ -33,13 +33,13 @@ object HttpClientProvider {
                             override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
                         }
 
-                    // Install the all-trusting trust manager
+                    // all-trusting trust manager
                     val sslContext = SSLContext.getInstance("SSL")
                     sslContext.init(null, arrayOf(trustAllCerts), SecureRandom())
 
                     sslSocketFactory(sslContext.socketFactory, trustAllCerts)
 
-                    // Ignore hostname verification
+                    // ignore hostname verification
                     hostnameVerifier { _, _ -> true }
                 }
             }
