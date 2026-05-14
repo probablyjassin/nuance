@@ -40,7 +40,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jassin.customdrome.UserPreferences
-import com.jassin.customdrome.models.AuthViewModel
+import com.jassin.customdrome.data.models.AuthViewModel
 import kotlinx.coroutines.launch
 
 @Composable

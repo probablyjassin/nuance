@@ -1,17 +1,14 @@
-package com.jassin.customdrome.models
+package com.jassin.customdrome.data.models
 
 import androidx.lifecycle.ViewModel
-import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.engine.okhttp.OkHttp
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.serialization.kotlinx.json.json
+import com.jassin.customdrome.data.api.HttpClientProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
@@ -37,41 +34,7 @@ private data class LoginPayload(
 )
 
 class AuthViewModel : ViewModel() {
-    private val client =
-        HttpClient(OkHttp) {
-            engine {
-                config {
-                    // 1. Create a trust manager that does not validate certificate chains
-                    val trustAllCerts =
-                        object : X509TrustManager {
-                            override fun checkClientTrusted(
-                                p0: Array<X509Certificate>,
-                                p1: String,
-                            ) {}
-
-                            override fun checkServerTrusted(
-                                chain: Array<out X509Certificate>?,
-                                authType: String?,
-                            ) {}
-
-                            override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
-                        }
-
-                    // 2. Install the all-trusting trust manager
-                    val sslContext = SSLContext.getInstance("SSL")
-                    sslContext.init(null, arrayOf(trustAllCerts), SecureRandom())
-
-                    sslSocketFactory(sslContext.socketFactory, trustAllCerts)
-
-                    // 3. Ignore hostname verification (matches IP/domain to cert)
-                    hostnameVerifier { _, _ -> true }
-                }
-            }
-
-            install(ContentNegotiation) {
-                json(Json { ignoreUnknownKeys = true })
-            }
-        }
+    private val client = HttpClientProvider.client
 
     private val _result = MutableStateFlow<String?>(null)
     val result: StateFlow<String?> = _result

@@ -34,9 +34,12 @@ fun AppNavigation(userPrefs: UserPreferences) {
             modifier = Modifier.padding(paddingValues),
         ) {
             composable("home") {
-                HomeScreen(onNavigateToLogin = {
-                    navController.navigate("login")
-                })
+                HomeScreen(
+                    onNavigateToLogin = {
+                        navController.navigate("login")
+                    },
+                    userPrefs = userPrefs,
+                )
             }
             composable("login") {
                 LoginScreen(
