@@ -50,8 +50,7 @@ fun PlayerSurface(
                     shape = RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius),
                 ),
     ) {
-        // --- Mini Player (fades out) ---
-        // Cover space is reserved by a Spacer inside MiniPlayerContent.
+        // miniplayer
         Box(
             modifier =
                 Modifier
@@ -61,8 +60,7 @@ fun PlayerSurface(
             MiniPlayerContent()
         }
 
-        // --- Full Player (fades in) ---
-        // The cover slot is an invisible Spacer; the floating cover renders on top.
+        // fullscreen player
         Box(
             modifier = Modifier.fillMaxSize(),
         ) {
@@ -72,17 +70,16 @@ fun PlayerSurface(
             )
         }
 
-        // --- Floating album cover ---
-        // Single Box that travels smoothly between the two positions.
+        // album cover
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val containerWidth = maxWidth
             val containerHeight = maxHeight
 
-            // Mini position: left-aligned, vertically centred in the 72 dp strip
+            // minimized: left, vertically centred
             val miniX = 12.dp
             val miniY = (72.dp - miniCoverSize) / 2 // = 12 dp
 
-            // Full position: centred in the surface with a slight upward shift
+            // fullscreen: centred
             val fullX = (containerWidth - fullCoverSize) / 2
             val fullY = (containerHeight - fullCoverSize) / 7 - 24.dp
 

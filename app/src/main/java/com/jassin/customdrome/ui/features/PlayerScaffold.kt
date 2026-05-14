@@ -68,14 +68,14 @@ fun PlayerScaffold(
         val miniPlayerHeightPx = with(density) { MiniPlayerHeight.toPx() }
         val bottomNavHeightPx = with(density) { BottomNavHeight.toPx() }
 
-        // Total travel distance of the sheet top edge (collapsed→expanded).
+        // total travel distance of the sheet's top edge
         val travelPx =
             screenHeightPx - miniPlayerHeightPx - bottomNavHeightPx - with(density) { 15.dp.toPx() }
 
-        // ── Main content ──────────────────────────────────────────────────────
+        // Main content
         content(PaddingValues(bottom = BottomNavHeight))
 
-        // ── Bottom navigation bar ─────────────────────────────────────────────
+        // Bottom navbar
         if (showNavBars) {
             Box(
                 modifier =
@@ -85,13 +85,13 @@ fun PlayerScaffold(
                 TabsBar(navController)
             }
 
-            // ── Player surface ────────────────────────────────────────────────────
+            // Player surface
             if (isSongPlaying) {
                 val progress = expandProgress.value
-                val p = progress // still Float, unchanged
+                val p = progress
 
-                val topCurve = 1f // 1.0 = linear
-                val heightCurve = 0.72f // < 1 = faster early growth, > 1 = slower early growth
+                val topCurve = 1f
+                val heightCurve = 0.72f
 
                 val topP = p.powCurve(topCurve)
                 val heightP = p.powCurve(heightCurve)
@@ -104,8 +104,7 @@ fun PlayerScaffold(
 
                 var startProgress by remember { mutableFloatStateOf(0f) }
 
-                // Re-register the BackHandler on every navigation change so it always
-                // sits on top of the OnBackPressedDispatcher stack (LIFO wins).
+                // BackHandler re-registered on every navigation change
                 val currentEntry by navController.currentBackStackEntryAsState()
                 key(currentEntry) {
                     BackHandler(enabled = expandProgress.value > 0.5f) {
