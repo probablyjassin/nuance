@@ -32,6 +32,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.pow
 
 // Height constants shared between scaffold and content padding
+private val TopBarHeight = 64.dp
 private val MiniPlayerHeight = 72.dp
 private val BottomNavHeight = 80.dp
 
@@ -74,7 +75,12 @@ fun PlayerScaffold(
             screenHeightPx - miniPlayerHeightPx - bottomNavHeightPx - with(density) { 15.dp.toPx() }
 
         // main content
-        content(PaddingValues(bottom = BottomNavHeight))
+        content(
+            PaddingValues(
+                top = if (showNavBars) TopBarHeight else 0.dp,
+                bottom = BottomNavHeight,
+            ),
+        )
 
         // bottom navbar
         if (showNavBars) {
