@@ -7,12 +7,12 @@ import com.jassin.customdrome.data.local.SongCacheDatabase
 import com.jassin.customdrome.data.models.HomeLoadResult
 import kotlinx.coroutines.flow.first
 
-class AuthRepository(
+class HomeRepository(
     private val userPrefs: UserPreferences,
     private val apiClient: NavidromeApiClient,
     private val songCacheDatabase: SongCacheDatabase,
 ) {
-    suspend fun checkLoginAndGetSongCount(): HomeLoadResult {
+    suspend fun loadHomeState(): HomeLoadResult {
         val token = userPrefs.token.first()
         val serverUrl = userPrefs.serverURL.first()
 
@@ -20,19 +20,27 @@ class AuthRepository(
             return HomeLoadResult.NotLoggedIn
         }
 
-        val loggedIn = apiClient.pingAuth(serverUrl, token)
-        if (!loggedIn) {
+        if (!apiClient.pingAuth(serverUrl, token)) {
             return HomeLoadResult.NotLoggedIn
         }
 
+        val songCount = loadSongCount(serverUrl, token)
+        return HomeLoadResult.LoggedIn(songCount = songCount)
+    }
+
+    private suspend fun loadSongCount(
+        serverUrl: String,
+        token: String,
+    ): Int {
         if (songCacheDatabase.isSongsCacheInitialized()) {
-            Log.d("AuthRepository", "Using cached songs: ${songCacheDatabase.getSongCount()} songs")
-            return HomeLoadResult.LoggedIn(songCount = songCacheDatabase.getSongCount())
+            val cachedCount = songCacheDatabase.getSongCount()
+            Log.d("HomeRepository", "Using cached songs: $cachedCount songs")
+            return cachedCount
         }
 
-        Log.d("AuthRepository", "Making http request to fetch songs")
+        Log.d("HomeRepository", "Fetching songs from server")
         val songs = apiClient.fetchSongs(serverUrl, token)
         songCacheDatabase.replaceAllSongs(songs)
-        return HomeLoadResult.LoggedIn(songCount = songs.size)
+        return songs.size
     }
 }

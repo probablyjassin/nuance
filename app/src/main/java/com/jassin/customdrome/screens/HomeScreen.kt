@@ -23,7 +23,7 @@ import com.jassin.customdrome.data.api.NavidromeApiClient
 import com.jassin.customdrome.data.local.SongCacheDatabase
 import com.jassin.customdrome.data.models.HomeLoadResult
 import com.jassin.customdrome.data.models.HomeScreenViewModel
-import com.jassin.customdrome.data.repository.AuthRepository
+import com.jassin.customdrome.data.repository.HomeRepository
 import kotlinx.coroutines.delay
 
 @Composable
@@ -36,7 +36,7 @@ fun HomeScreen(
     // Build small dependency graph here; memoize to avoid re-creating on recomposition
     val apiClient = remember { NavidromeApiClient() }
     val songCacheDatabase = remember { SongCacheDatabase(context.applicationContext) }
-    val authRepo = remember(userPrefs, songCacheDatabase) { AuthRepository(userPrefs, apiClient, songCacheDatabase) }
+    val homeRepository = remember(userPrefs, songCacheDatabase) { HomeRepository(userPrefs, apiClient, songCacheDatabase) }
 
     // Inline factory so we can use viewModel() and keep lifecycle integration
     val vm: HomeScreenViewModel =
@@ -44,7 +44,7 @@ fun HomeScreen(
             factory =
                 object : ViewModelProvider.Factory {
                     @Suppress("UNCHECKED_CAST")
-                    override fun <T : ViewModel> create(modelClass: Class<T>): T = HomeScreenViewModel(authRepo) as T
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T = HomeScreenViewModel(homeRepository) as T
                 },
         )
 

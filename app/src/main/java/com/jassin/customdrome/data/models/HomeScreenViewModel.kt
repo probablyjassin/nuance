@@ -2,13 +2,13 @@ package com.jassin.customdrome.data.models
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jassin.customdrome.data.repository.AuthRepository
+import com.jassin.customdrome.data.repository.HomeRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class HomeScreenViewModel(
-    private val authRepository: AuthRepository,
+    private val homeRepository: HomeRepository,
 ) : ViewModel() {
     private val _homeState = MutableStateFlow<HomeLoadResult>(HomeLoadResult.Loading)
     val homeState: StateFlow<HomeLoadResult> = _homeState
@@ -21,7 +21,7 @@ class HomeScreenViewModel(
             _homeState.value = HomeLoadResult.Loading
 
             try {
-                when (val result = authRepository.checkLoginAndGetSongCount()) {
+                when (val result = homeRepository.loadHomeState()) {
                     is HomeLoadResult.LoggedIn -> {
                         _homeState.value = result
                         _toastMessage.value = "Logged in. You have ${result.songCount} songs."
