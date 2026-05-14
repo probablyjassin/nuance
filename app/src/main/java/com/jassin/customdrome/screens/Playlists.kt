@@ -1,4 +1,4 @@
-package com.jassin.customdrome.ui.tabs
+package com.jassin.customdrome.screens
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,13 +9,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 
 @Composable
-fun Songs() {
+fun Playlists() {
     Box(
-        modifier = Modifier.fillMaxSize().safeDrawingPadding(),
-        contentAlignment = Alignment.Center,
+        modifier = Modifier.Companion.fillMaxSize().safeDrawingPadding(),
+        contentAlignment = Alignment.Companion.Center,
     ) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Songs Screen")
+        Box(Modifier.Companion.fillMaxSize(), contentAlignment = Alignment.Companion.Center) {
+            Text("Playlists Screen")
         }
     }
 }
