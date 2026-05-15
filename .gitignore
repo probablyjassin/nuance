@@ -7,6 +7,7 @@ local.properties
 # Build Outputs
 build/
 app/build/
+app/release/
 captured_blobs/
 
 # OS Files
