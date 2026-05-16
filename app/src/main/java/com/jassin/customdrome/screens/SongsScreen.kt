@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -32,7 +33,10 @@ import com.jassin.customdrome.data.repository.SongsRepository
 import com.jassin.customdrome.ui.common.SingleSongDisplay
 
 @androidx.compose.runtime.Composable
-fun Songs(userPrefs: UserPreferences) {
+fun Songs(
+    userPrefs: UserPreferences,
+    listState: LazyListState,
+) {
     val context = LocalContext.current
     val apiClient = remember { NavidromeApiClient() }
     val songCacheDatabase = remember { SongCacheDatabase(context.applicationContext) }
@@ -84,6 +88,7 @@ fun Songs(userPrefs: UserPreferences) {
             } else {
                 val songs = state.songs
                 androidx.compose.foundation.lazy.LazyColumn(
+                    state = listState,
                     modifier = Modifier.fillMaxSize().safeDrawingPadding(),
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp),

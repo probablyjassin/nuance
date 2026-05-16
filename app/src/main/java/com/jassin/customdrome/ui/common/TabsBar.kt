@@ -69,6 +69,16 @@ fun TabsBar(navController: NavHostController) {
                 label = { Text(screen.label) },
                 selected = currentRoute == screen.route,
                 onClick = {
+                    if (screen.route == currentRoute) {
+                        // Already on this screen
+                        // scroll to top
+                        navController.currentBackStackEntry
+                            ?.savedStateHandle
+                            ?.set("scroll_to_top", System.currentTimeMillis())
+
+                        return@NavigationBarItem
+                    }
+
                     navController.navigate(screen.route) {
                         popUpTo(navController.graph.id) {
                             saveState = true
