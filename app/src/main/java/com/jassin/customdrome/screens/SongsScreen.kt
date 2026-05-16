@@ -84,7 +84,7 @@ fun Songs(userPrefs: UserPreferences) {
             } else {
                 val songs = state.songs
                 androidx.compose.foundation.lazy.LazyColumn(
-                    modifier = Modifier.fillMaxSize().safeDrawingPadding().padding(bottom = 80.dp),
+                    modifier = Modifier.fillMaxSize().safeDrawingPadding(),
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
@@ -97,8 +97,10 @@ fun Songs(userPrefs: UserPreferences) {
                                 else -> RoundedCornerShape(0.dp)
                             }
 
+                        val bottomPadding = if (index == songs.lastIndex) 80.dp else 0.dp
+
                         Surface(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().padding(bottom = bottomPadding),
                             shape = shape,
                             color = MaterialTheme.colorScheme.surfaceContainerLow,
                             tonalElevation = 1.dp,
