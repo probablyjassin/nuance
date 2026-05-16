@@ -1,6 +1,5 @@
 package com.jassin.customdrome.screens
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,10 +20,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jassin.customdrome.UserPreferences
 import com.jassin.customdrome.data.api.NavidromeApiClient
 import com.jassin.customdrome.data.local.SongCacheDatabase
-import com.jassin.customdrome.data.models.HomeLoadResult
 import com.jassin.customdrome.data.models.HomeScreenViewModel
 import com.jassin.customdrome.data.repository.HomeRepository
-import kotlinx.coroutines.delay
 
 @Composable
 fun HomeScreen(
@@ -33,7 +30,7 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
 
-    // memoize to avoid re-creating on recomposition
+    // ...existing code...
     val apiClient = remember { NavidromeApiClient() }
     val songCacheDatabase = remember { SongCacheDatabase(context.applicationContext) }
     val homeRepository = remember(userPrefs, songCacheDatabase) { HomeRepository(userPrefs, apiClient, songCacheDatabase) }
@@ -47,46 +44,29 @@ fun HomeScreen(
                 },
         )
 
-    val homeState by vm.homeState.collectAsState()
+    val songCount by vm.songCount.collectAsState()
+    val isLoading by vm.isLoading.collectAsState()
     val toastMessage by vm.toastMessage.collectAsState()
 
     LaunchedEffect(Unit) { vm.loadHome() }
-
-    LaunchedEffect(toastMessage) {
-        toastMessage?.let {
-            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
-            delay(1500)
-            vm.clearToast()
-        }
-    }
-
-    LaunchedEffect(homeState) {
-        if (homeState is HomeLoadResult.NotLoggedIn) {
-            onNavigateToLogin()
-        }
-    }
 
     Column(
         modifier = Modifier.fillMaxSize().padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        when (val state = homeState) {
-            HomeLoadResult.Loading -> {
-                Text("Checking login status...")
+        when {
+            isLoading -> {
+                Text("Loading...")
             }
 
-            HomeLoadResult.NotLoggedIn -> {
-                Text("Not logged in.")
-            }
-
-            is HomeLoadResult.LoggedIn -> {
+            songCount != null -> {
                 Text("Logged in.")
-                Text("Songs in your library: ${state.songCount}")
+                Text("Songs in your library: $songCount")
             }
 
-            is HomeLoadResult.Error -> {
-                Text("Error: ${state.message}")
+            else -> {
+                Text("Failed to load songs.")
             }
         }
     }

@@ -4,7 +4,6 @@ import android.util.Log
 import com.jassin.customdrome.UserPreferences
 import com.jassin.customdrome.data.api.NavidromeApiClient
 import com.jassin.customdrome.data.local.SongCacheDatabase
-import com.jassin.customdrome.data.models.HomeLoadResult
 import kotlinx.coroutines.flow.first
 
 class HomeRepository(
@@ -12,23 +11,22 @@ class HomeRepository(
     private val apiClient: NavidromeApiClient,
     private val songCacheDatabase: SongCacheDatabase,
 ) {
-    suspend fun loadHomeState(): HomeLoadResult {
+    suspend fun loadSongCount(): Int {
         val token = userPrefs.token.first()
         val serverUrl = userPrefs.serverURL.first()
 
-        if (token.isNullOrBlank() || serverUrl.isNullOrBlank()) {
-            return HomeLoadResult.NotLoggedIn
+        // Auth already validated by SplashScreen, just load song count
+        val nonNullToken = token ?: throw IllegalStateException("Auth should have been validated by SplashScreen")
+        val nonNullUrl = serverUrl ?: throw IllegalStateException("Auth should have been validated by SplashScreen")
+
+        if (nonNullToken.isBlank() || nonNullUrl.isBlank()) {
+            throw IllegalStateException("Auth should have been validated by SplashScreen")
         }
 
-        if (!apiClient.pingAuth(serverUrl, token)) {
-            return HomeLoadResult.NotLoggedIn
-        }
-
-        val songCount = loadSongCount(serverUrl, token)
-        return HomeLoadResult.LoggedIn(songCount = songCount)
+        return loadSongCountInternal(nonNullUrl, nonNullToken)
     }
 
-    private suspend fun loadSongCount(
+    private suspend fun loadSongCountInternal(
         serverUrl: String,
         token: String,
     ): Int {

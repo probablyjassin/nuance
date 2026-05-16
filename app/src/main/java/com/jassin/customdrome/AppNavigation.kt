@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.jassin.customdrome.screens.HomeScreen
+import com.jassin.customdrome.screens.SplashScreen
 import com.jassin.customdrome.screens.LoginScreen
 import com.jassin.customdrome.screens.Playlists
 import com.jassin.customdrome.screens.SettingsScreen
@@ -31,9 +32,13 @@ fun AppNavigation(userPrefs: UserPreferences) {
     PlayerScaffold(navController = navController, showNavElements()) { paddingValues ->
         NavHost(
             navController = navController,
-            startDestination = "home",
+            startDestination = "splash",
             modifier = Modifier.padding(paddingValues),
         ) {
+            composable("splash") {
+                SplashScreen(navController = navController, userPrefs = userPrefs)
+            }
+
             composable("home") {
                 HomeScreen(
                     onNavigateToLogin = {

@@ -10,35 +10,27 @@ import kotlinx.coroutines.launch
 class HomeScreenViewModel(
     private val homeRepository: HomeRepository,
 ) : ViewModel() {
-    private val _homeState = MutableStateFlow<HomeLoadResult>(HomeLoadResult.Loading)
-    val homeState: StateFlow<HomeLoadResult> = _homeState
+    private val _songCount = MutableStateFlow<Int?>(null)
+    val songCount: StateFlow<Int?> = _songCount
+
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading
 
     private val _toastMessage = MutableStateFlow<String?>(null)
     val toastMessage: StateFlow<String?> = _toastMessage
 
     fun loadHome() {
         viewModelScope.launch {
-            _homeState.value = HomeLoadResult.Loading
+            _isLoading.value = true
 
             try {
-                when (val result = homeRepository.loadHomeState()) {
-                    is HomeLoadResult.LoggedIn -> {
-                        _homeState.value = result
-                        _toastMessage.value = "Logged in. You have ${result.songCount} songs."
-                    }
-
-                    HomeLoadResult.NotLoggedIn -> {
-                        _homeState.value = HomeLoadResult.NotLoggedIn
-                        _toastMessage.value = "Not logged in."
-                    }
-
-                    else -> {
-                        _homeState.value = HomeLoadResult.NotLoggedIn
-                    }
-                }
+                val count = homeRepository.loadSongCount()
+                _songCount.value = count
+                _toastMessage.value = "Logged in. You have $count songs."
             } catch (t: Throwable) {
-                _homeState.value = HomeLoadResult.Error(t.message ?: "Unknown error")
-                _toastMessage.value = "Failed to check login: ${t.message ?: "Unknown error"}"
+                _toastMessage.value = "Failed to load: ${t.message ?: "Unknown error"}"
+            } finally {
+                _isLoading.value = false
             }
         }
     }
