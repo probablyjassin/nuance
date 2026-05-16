@@ -46,7 +46,7 @@ fun PlayerSurface(
                 .offset { IntOffset(0, playerTopPx.roundToInt()) }
                 .then(modifier)
                 .background(
-                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    color = MaterialTheme.colorScheme.onPrimaryFixedVariant,
                     shape = RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius),
                 ).clip(RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius)),
     ) {
