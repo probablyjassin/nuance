@@ -219,7 +219,7 @@ fun PlayerScaffold(
 
                                         // thresholds
                                         val distanceThreshold = with(density) { 1.dp.toPx() }
-                                        val velocityThreshold = 50f // px/sec
+                                        val velocityThreshold = 10f // px/sec
 
                                         if (startedFromCollapsed) {
                                             if (didDownwardDismiss) {
@@ -244,14 +244,14 @@ fun PlayerScaffold(
                                                     // strong upward fling -> expand
                                                     velocityY < -velocityThreshold -> {
                                                         scope.launch {
-                                                            expandProgress.animateTo(1f, tween(300))
+                                                            expandProgress.animateTo(1f, tween(60))
                                                         }
                                                     }
 
                                                     // strong downward fling -> collapse/don't expand
                                                     velocityY > velocityThreshold -> {
                                                         scope.launch {
-                                                            expandProgress.animateTo(0f, tween(300))
+                                                            expandProgress.animateTo(0f, tween(60))
                                                         }
                                                     }
 
@@ -265,7 +265,7 @@ fun PlayerScaffold(
                                                             } else {
                                                                 0f
                                                             }*/
-                                                        scope.launch { expandProgress.animateTo(1f, tween(200, easing = LinearEasing)) }
+                                                        scope.launch { expandProgress.animateTo(1f, tween(60, easing = LinearEasing)) }
                                                     }
                                                 }
                                             }
@@ -273,16 +273,16 @@ fun PlayerScaffold(
                                             // Not started from collapsed: behave like a sheet, but use velocity to pick destination.
                                             when {
                                                 velocityY < -velocityThreshold -> {
-                                                    scope.launch { expandProgress.animateTo(1f, tween(300)) }
+                                                    scope.launch { expandProgress.animateTo(1f, tween(60)) }
                                                 }
 
                                                 velocityY > velocityThreshold -> {
-                                                    scope.launch { expandProgress.animateTo(0f, tween(300)) }
+                                                    scope.launch { expandProgress.animateTo(0f, tween(60)) }
                                                 }
 
                                                 else -> {
                                                     val target = if (expandProgress.value > startProgress) 1f else 0f
-                                                    scope.launch { expandProgress.animateTo(target, tween(200, easing = LinearEasing)) }
+                                                    scope.launch { expandProgress.animateTo(target, tween(60, easing = LinearEasing)) }
                                                 }
                                             }
                                         }
@@ -312,7 +312,7 @@ fun PlayerScaffold(
                                 // This defines the visual effect. Setting it to null removes the circle/ripple.
                                 indication = null,
                             ) {
-                                scope.launch { expandProgress.animateTo(1f, tween(150)) }
+                                scope.launch { expandProgress.animateTo(1f, tween(120)) }
                             },
                 )
             }
