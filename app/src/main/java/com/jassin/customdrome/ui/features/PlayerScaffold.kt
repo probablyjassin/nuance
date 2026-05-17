@@ -1,6 +1,5 @@
 package com.jassin.customdrome.ui.features
 
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -60,15 +59,6 @@ fun PlayerScaffold(
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-
-    fun doToast(text: String) {
-        Toast
-            .makeText(
-                context,
-                "$text",
-                Toast.LENGTH_SHORT,
-            ).show()
-    }
 
     val playbackState by playbackManager.state.collectAsState()
     val currentSong = playbackState.currentItem
@@ -253,7 +243,6 @@ fun PlayerScaffold(
                                                 when {
                                                     // strong upward fling -> expand
                                                     velocityY < -velocityThreshold -> {
-                                                        doToast("up $velocityY")
                                                         scope.launch {
                                                             expandProgress.animateTo(1f, tween(300))
                                                         }
@@ -261,7 +250,6 @@ fun PlayerScaffold(
 
                                                     // strong downward fling -> collapse/don't expand
                                                     velocityY > velocityThreshold -> {
-                                                        doToast("down $velocityY")
                                                         scope.launch {
                                                             expandProgress.animateTo(0f, tween(300))
                                                         }
