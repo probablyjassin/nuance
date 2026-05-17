@@ -1,5 +1,6 @@
 package com.jassin.customdrome.ui.features
 
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -24,6 +25,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.util.VelocityTracker
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -33,6 +36,7 @@ import com.jassin.customdrome.playback.PlaybackManager
 import com.jassin.customdrome.ui.common.TabsBar
 import com.jassin.customdrome.ui.common.TopBar
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 import kotlin.math.pow
 
 // Height constants shared between scaffold and content padding
@@ -55,6 +59,7 @@ fun PlayerScaffold(
     content: @Composable (PaddingValues) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     val playbackState by playbackManager.state.collectAsState()
     val currentSong = playbackState.currentItem
@@ -111,6 +116,8 @@ fun PlayerScaffold(
                 var startProgress by remember { mutableFloatStateOf(0f) }
                 var startedFromCollapsed by remember { mutableStateOf(false) }
                 var didDownwardDismiss by remember { mutableStateOf(false) }
+                var collapsedDragDirection by remember { mutableFloatStateOf(0f) } // 0 = undecided, -1 = up/expand, 1 = down/dismiss
+                var collapsedDragAccumulatedY by remember { mutableFloatStateOf(0f) }
 
                 // BackHandler re-registered on every navigation change
                 val currentEntry by navController.currentBackStackEntryAsState()
@@ -149,103 +156,154 @@ fun PlayerScaffold(
                     modifier =
                         Modifier
                             .pointerInput(Unit) {
+                                // Use the higher level detector but track velocity manually with VelocityTracker.
+                                var velocityTracker: VelocityTracker? = null
                                 detectVerticalDragGestures(
-                                    onDragStart = {
+                                    onDragStart = { _ ->
                                         scope.launch { expandProgress.stop() }
                                         startProgress = expandProgress.value
                                         startedFromCollapsed = expandProgress.value < 0.15f
                                         didDownwardDismiss = false
+                                        collapsedDragDirection = 0f
+                                        collapsedDragAccumulatedY = 0f
+                                        velocityTracker = VelocityTracker()
+                                        // intentionally not consuming to keep compatibility with current Compose API
                                     },
                                     onVerticalDrag = { change, dragAmount ->
-                                        change.consume()
+                                        // add positions for velocity calculation
+                                        velocityTracker?.addPosition(change.uptimeMillis, change.position)
+                                        // intentionally not consuming to keep compatibility with current Compose API
+
+                                        // Lock the intent (dismiss vs expand) only after a tiny accumulated threshold,
+                                        // so initial jitter doesn't classify an upward drag as downward dismiss.
+                                        if (startedFromCollapsed && collapsedDragDirection == 0f) {
+                                            collapsedDragAccumulatedY += dragAmount
+                                            val directionLockThresholdPx = with(density) { 6.dp.toPx() }
+                                            if (abs(collapsedDragAccumulatedY) >= directionLockThresholdPx) {
+                                                collapsedDragDirection = if (collapsedDragAccumulatedY > 0f) 1f else -1f
+                                                didDownwardDismiss = collapsedDragDirection > 0f
+                                            }
+                                        }
+
                                         when {
-                                            // A gesture that starts collapsed and moves downward is a dismissal attempt.
-                                            startedFromCollapsed && dragAmount > 0f -> {
-                                                didDownwardDismiss = true
+                                            // Gesture intent was locked as downward dismiss.
+                                            startedFromCollapsed && collapsedDragDirection > 0f -> {
                                                 scope.launch {
-                                                    dismissOffsetY.snapTo(
-                                                        (dismissOffsetY.value + dragAmount).coerceAtLeast(0f),
-                                                    )
+                                                    dismissOffsetY.snapTo((dismissOffsetY.value + dragAmount).coerceAtLeast(0f))
                                                 }
                                             }
 
-                                            // If the user reverses a dismissal gesture, just return to the mini-player.
-                                            startedFromCollapsed && didDownwardDismiss && dragAmount < 0f -> {
-                                                scope.launch {
-                                                    dismissOffsetY.snapTo(
-                                                        (dismissOffsetY.value + dragAmount).coerceAtLeast(0f),
-                                                    )
-                                                }
-                                            }
-
-                                            // Upward drag from the collapsed state should expand the player.
-                                            startedFromCollapsed && dragAmount < 0f -> {
+                                            // Gesture intent was locked as upward expand.
+                                            startedFromCollapsed && collapsedDragDirection < 0f -> {
                                                 scope.launch {
                                                     val delta = -dragAmount / travelPx
-                                                    expandProgress.snapTo(
-                                                        (expandProgress.value + delta).coerceIn(0f, 1f),
-                                                    )
+                                                    expandProgress.snapTo((expandProgress.value + delta).coerceIn(0f, 1f))
                                                 }
                                             }
 
                                             // Downward drag while not collapsed keeps the sheet behavior stable.
-                                            else -> {
+                                            !startedFromCollapsed -> {
                                                 val delta = -dragAmount / travelPx
                                                 scope.launch {
-                                                    expandProgress.snapTo(
-                                                        (expandProgress.value + delta).coerceIn(0f, 1f),
-                                                    )
+                                                    expandProgress.snapTo((expandProgress.value + delta).coerceIn(0f, 1f))
                                                 }
+                                            }
+
+                                            // startedFromCollapsed + undecided direction: wait for enough movement.
+                                            else -> {
+                                                // no-op until drag direction is locked
                                             }
                                         }
                                     },
                                     onDragEnd = {
+                                        val velocityY = velocityTracker?.calculateVelocity()?.y ?: 0f
+
+                                        // thresholds
+                                        val distanceThreshold = with(density) { 20.dp.toPx() }
+                                        val velocityThreshold = 100f // px/sec
+
                                         if (startedFromCollapsed) {
-                                            // decide whether to dismiss based on vertical travel
-                                            val threshold = with(density) { 20.dp.toPx() }
                                             if (didDownwardDismiss) {
-                                                if (dismissOffsetY.value > threshold) {
-                                                    // animate off-screen to bottom-right then mark not playing
+                                                scope.launch {
+                                                    Toast
+                                                        .makeText(
+                                                            context,
+                                                            "dismissed",
+                                                            Toast.LENGTH_SHORT,
+                                                        ).show()
+                                                }
+                                                // Dismiss path: either sufficient distance or a downward fling
+                                                if (dismissOffsetY.value > distanceThreshold || velocityY > velocityThreshold) {
                                                     val targetY = screenHeightPx + 400f
                                                     scope.launch {
+                                                        // use the fling velocity for a natural animation
                                                         dismissOffsetY.animateTo(targetY, tween(300))
-                                                        // Dismiss currently clears queue until playback engine is wired.
                                                         playbackManager.clearQueue()
-                                                        // reset offsets just in case
                                                         dismissOffsetY.snapTo(0f)
                                                     }
                                                 } else {
-                                                    // animate back to original position
-                                                    scope.launch {
-                                                        dismissOffsetY.animateTo(0f, tween(200))
-                                                    }
+                                                    scope.launch { dismissOffsetY.animateTo(0f, tween(200)) }
                                                 }
                                             } else {
-                                                val target = if (expandProgress.value > startProgress) 1f else 0f
-                                                scope.launch {
-                                                    expandProgress.animateTo(
-                                                        target,
-                                                        tween(60, easing = LinearEasing),
-                                                    )
+                                                // Expansion path: upward fling expands; downward fling collapses.
+
+                                                when {
+                                                    // strong upward fling -> expand
+                                                    velocityY < -velocityThreshold -> {
+                                                        scope.launch {
+                                                            expandProgress.animateTo(1f, tween(300))
+                                                        }
+                                                    }
+
+                                                    // strong downward fling -> collapse/don't expand
+                                                    velocityY > velocityThreshold -> {
+                                                        scope.launch {
+                                                            expandProgress.animateTo(0f, tween(300))
+                                                        }
+                                                    }
+
+                                                    // otherwise decide by how far the finger moved relative to start
+                                                    else -> {
+                                                        scope.launch { expandProgress.animateTo(0f, tween(200, easing = LinearEasing)) }
+                                                        /*val target = if (expandProgress.value > startProgress) 1f else 0f
+                                                        scope.launch { expandProgress.animateTo(target, tween(200, easing = LinearEasing)) }*/
+                                                    }
                                                 }
                                             }
                                         } else {
-                                            val target = if (expandProgress.value > startProgress) 1f else 0f
-                                            scope.launch {
-                                                expandProgress.animateTo(
-                                                    target,
-                                                    tween(60, easing = LinearEasing),
-                                                )
+                                            // Not started from collapsed: behave like a sheet, but use velocity to pick destination.
+                                            when {
+                                                velocityY < -velocityThreshold -> {
+                                                    scope.launch { expandProgress.animateTo(1f, tween(300)) }
+                                                }
+
+                                                velocityY > velocityThreshold -> {
+                                                    scope.launch { expandProgress.animateTo(0f, tween(300)) }
+                                                }
+
+                                                else -> {
+                                                    val target = if (expandProgress.value > startProgress) 1f else 0f
+                                                    scope.launch { expandProgress.animateTo(target, tween(200, easing = LinearEasing)) }
+                                                }
                                             }
                                         }
+
+                                        // reset transient flags and tracker
+                                        startedFromCollapsed = false
+                                        didDownwardDismiss = false
+                                        collapsedDragDirection = 0f
+                                        collapsedDragAccumulatedY = 0f
+                                        velocityTracker = null
                                     },
                                     onDragCancel = {
-                                        // reset any dismissal offsets
                                         scope.launch {
                                             dismissOffsetY.animateTo(0f, tween(200))
                                             startedFromCollapsed = false
                                             didDownwardDismiss = false
                                         }
+                                        collapsedDragDirection = 0f
+                                        collapsedDragAccumulatedY = 0f
+                                        velocityTracker = null
                                     },
                                 )
                             }.clickable(
@@ -260,14 +318,14 @@ fun PlayerScaffold(
                 )
             }
 
-                            Box(
-                                modifier =
-                                    Modifier
-                                        .align(Alignment.BottomCenter)
-                                        .zIndex(1f),
-                            ) {
-                                TabsBar(navController)
-                            }
+            Box(
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .zIndex(1f),
+            ) {
+                TabsBar(navController)
+            }
         }
     }
 }
