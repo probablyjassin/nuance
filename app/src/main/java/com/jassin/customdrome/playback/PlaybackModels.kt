@@ -1,3 +1,5 @@
+@file:Suppress("ArrayInDataClass")
+
 package com.jassin.customdrome.playback
 
 import com.jassin.customdrome.data.models.SongUiModel
@@ -9,6 +11,7 @@ data class PlaybackItem(
     val album: String? = null,
     val coverArtId: String? = null,
     val durationMs: Long? = null,
+    val streamUrl: String? = null,
 )
 
 data class PlaybackState(
