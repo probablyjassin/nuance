@@ -27,6 +27,10 @@ class SongsRepository(
     private val songCacheDatabase: SongCacheDatabase,
     private val coverArtCache: CoverArtCache,
 ) {
+    private companion object {
+        const val TAG = "SongsRepository"
+    }
+
     private val coverFetchMutex = Mutex()
     private val memoryCache = LruCoverCache(maxSize = 100)
     private val memoryCacheLock = Mutex()
@@ -50,6 +54,12 @@ class SongsRepository(
     suspend fun getCoverArtQueued(songId: String): ByteArray? =
         coverFetchMutex.withLock {
             getCoverArt(songId)
+        }
+
+    suspend fun getStreamUrlQueued(songId: String): String? =
+        coverFetchMutex.withLock {
+            Log.d(TAG, "Resolving stream URL (queued) for songId=$songId")
+            getStreamUrl(songId)
         }
 
     private suspend fun refreshSongsInternal(): List<SongUiModel> {
@@ -122,5 +132,33 @@ class SongsRepository(
             coverArtCache.saveCoverArt(songId, result)
         }
         return result
+    }
+
+    private suspend fun getStreamUrl(songId: String): String? {
+        val serverUrl = userPrefs.serverURL.first()
+        val username = userPrefs.userName.first()
+        val subsonicToken = userPrefs.subsonicToken.first()
+        val subsonicSalt = userPrefs.subsonicSalt.first()
+
+        if (
+            serverUrl.isNullOrBlank() ||
+            username.isNullOrBlank() ||
+            subsonicToken.isNullOrBlank() ||
+            subsonicSalt.isNullOrBlank()
+        ) {
+            Log.d(TAG, "Cannot resolve stream URL for $songId: missing credentials")
+            return null
+        }
+
+        val resolvedUrl =
+            apiClient.resolveStreamUrl(
+            serverUrl = serverUrl,
+            username = username,
+            subsonicToken = subsonicToken,
+            subsonicSalt = subsonicSalt,
+            songId = songId,
+        )
+        Log.d(TAG, "Resolved stream URL for songId=$songId")
+        return resolvedUrl
     }
 }
