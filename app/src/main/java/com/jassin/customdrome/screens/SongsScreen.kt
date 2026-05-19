@@ -16,7 +16,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+// ...existing code...
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -28,7 +28,7 @@ import com.jassin.customdrome.UserPreferences
 import com.jassin.customdrome.data.api.NavidromeApiClient
 import com.jassin.customdrome.data.local.CoverArtCache
 import com.jassin.customdrome.data.local.SongCacheDatabase
-import com.jassin.customdrome.data.models.SongUiModel
+// ...existing code... (removed unused SongUiModel import)
 import com.jassin.customdrome.data.models.SongsUiState
 import com.jassin.customdrome.data.models.SongsViewModel
 import com.jassin.customdrome.data.repository.SongsRepository
@@ -63,7 +63,7 @@ fun Songs(
     val songsState by vm.songsState.collectAsState()
     val coverCache = remember { mutableStateOf<Map<String, ByteArray>>(emptyMap()) }
 
-    var optionsSelectedSong by remember { mutableStateOf<SongUiModel?>(null) }
+    // Placeholder for future per-song options (currently unused)
 
     when (val state = songsState) {
         SongsUiState.Loading -> {
@@ -94,6 +94,7 @@ fun Songs(
                 }
             } else {
                 val songs = state.songs
+
                 androidx.compose.foundation.lazy.LazyColumn(
                     state = listState,
                     modifier = Modifier.fillMaxSize().safeDrawingPadding(),
@@ -139,11 +140,6 @@ fun Songs(
                             )
                         }
                     }
-                }
-                if (optionsSelectedSong != null) {
-                    /*ModalBottomSheet(onDismissRequest = { selectedSongForOptions = null }) {
-                        SongOptionsMenu(song = selectedSongForOptions!!)
-                    }*/
                 }
             }
         }

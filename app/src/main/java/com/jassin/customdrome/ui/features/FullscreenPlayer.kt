@@ -39,6 +39,8 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import java.util.Locale
 import kotlin.math.roundToLong
+import ir.mahozad.multiplatform.wavyslider.material.WavySlider
+import ir.mahozad.multiplatform.wavyslider.WaveDirection.*
 
 @Composable
 fun FullscreenPlayer(
@@ -135,7 +137,7 @@ fun FullscreenPlayer(
             if (seekEnabled) {
                 Spacer(modifier = Modifier.height(24.dp))
 
-                Slider(
+                WavySlider(
                     value = if (isScrubbing) scrubFraction else playbackFraction,
                     onValueChange = {
                         isScrubbing = true
@@ -148,6 +150,21 @@ fun FullscreenPlayer(
                         displayedPositionMs = targetPosition
                         isScrubbing = false
                     },
+                    enabled = true,
+                    // Customize colors via SliderDefaults.colors(). Use MaterialTheme colors or explicit Color(...) values.
+                    colors = androidx.compose.material.SliderDefaults.colors(
+                        activeTrackColor = MaterialTheme.colorScheme.primary,
+                        inactiveTrackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.12f),
+                        thumbColor = MaterialTheme.colorScheme.primary,
+                    ),
+                    waveLength = 37.dp,
+                    // collapse to a straight line when paused by setting waveHeight to 0.dp
+                    waveHeight = if (isPlaying) 8.dp else 0.dp,
+                    // stop horizontal movement when paused by setting velocity to 0.dp
+                    waveVelocity = if (isPlaying) 20.dp to TAIL else 0.dp to TAIL,
+                    waveThickness = 3.dp,
+                    trackThickness = 4.dp,
+                    incremental = false,
                     modifier = Modifier.fillMaxWidth(),
                 )
 
