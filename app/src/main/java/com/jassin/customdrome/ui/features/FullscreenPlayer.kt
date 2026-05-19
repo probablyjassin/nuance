@@ -110,7 +110,8 @@ fun FullscreenPlayer(
             modifier =
                 Modifier
                     .align(Alignment.Center)
-                    .offset(y = (40).dp)
+                    .offset(y = (80).dp)
+                    .padding(horizontal = 20.dp)
                     .graphicsLayer {
                         alpha = p
                         translationY = (1f - p) * 40f
