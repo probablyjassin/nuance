@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:no-wildcard-imports")
+
 package com.jassin.customdrome.ui.features
 
 import androidx.compose.foundation.layout.Arrangement
@@ -36,11 +38,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import ir.mahozad.multiplatform.wavyslider.WaveDirection.*
+import ir.mahozad.multiplatform.wavyslider.material.WavySlider
 import kotlinx.coroutines.delay
 import java.util.Locale
 import kotlin.math.roundToLong
-import ir.mahozad.multiplatform.wavyslider.material.WavySlider
-import ir.mahozad.multiplatform.wavyslider.WaveDirection.*
 
 @Composable
 fun FullscreenPlayer(
@@ -152,11 +154,12 @@ fun FullscreenPlayer(
                     },
                     enabled = true,
                     // Customize colors via SliderDefaults.colors(). Use MaterialTheme colors or explicit Color(...) values.
-                    colors = androidx.compose.material.SliderDefaults.colors(
-                        activeTrackColor = MaterialTheme.colorScheme.primary,
-                        inactiveTrackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.12f),
-                        thumbColor = MaterialTheme.colorScheme.primary,
-                    ),
+                    colors =
+                        androidx.compose.material.SliderDefaults.colors(
+                            activeTrackColor = MaterialTheme.colorScheme.primary,
+                            inactiveTrackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.12f),
+                            thumbColor = MaterialTheme.colorScheme.primary,
+                        ),
                     waveLength = 37.dp,
                     // collapse to a straight line when paused by setting waveHeight to 0.dp
                     waveHeight = if (isPlaying) 8.dp else 0.dp,
