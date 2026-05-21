@@ -60,6 +60,7 @@ fun AppNavigation(userPrefs: UserPreferences) {
         navController = navController,
         showNavBars = showNavElements(),
         playbackManager = playbackManager,
+        songsRepository = songsRepository,
     ) { paddingValues ->
         NavHost(
             navController = navController,

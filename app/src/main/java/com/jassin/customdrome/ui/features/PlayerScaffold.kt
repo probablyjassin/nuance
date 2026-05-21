@@ -16,10 +16,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,7 +33,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.jassin.customdrome.data.models.SongUiModel
 import com.jassin.customdrome.playback.PlaybackManager
+import com.jassin.customdrome.playback.toPlaybackItem
+import com.jassin.customdrome.ui.common.FullScreenSearchOverlay
 import com.jassin.customdrome.ui.common.TabsBar
 import com.jassin.customdrome.ui.common.TopBar
 import kotlinx.coroutines.launch
@@ -55,12 +60,20 @@ fun PlayerScaffold(
     navController: NavHostController,
     showNavBars: Boolean,
     playbackManager: PlaybackManager,
+    songsRepository: com.jassin.customdrome.data.repository.SongsRepository,
     content: @Composable (PaddingValues) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
 
     val playbackState by playbackManager.state.collectAsState()
     val currentSong = playbackState.currentItem
+    val searchSongs by produceState(initialValue = emptyList<SongUiModel>(), key1 = songsRepository) {
+        value = runCatching { songsRepository.loadSongs() }.getOrDefault(emptyList())
+    }
+
+    var searchOverlayVisible by remember { mutableStateOf(false) }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    val searchOverlayProgress = remember { Animatable(0f) }
 
     val dismissOffsetY = remember { Animatable(0f) }
 
@@ -70,10 +83,6 @@ fun PlayerScaffold(
     val expandProgress = remember { Animatable(0f, Float.VectorConverter) }
 
     // top nav
-    if (showNavBars) {
-        TopBar(onGoToSettings = { navController.navigate(route = "settings") })
-    }
-
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val density = LocalDensity.current
         val screenHeightPx = constraints.maxHeight.toFloat()
@@ -86,18 +95,52 @@ fun PlayerScaffold(
         val travelPx =
             screenHeightPx - miniPlayerHeightPx - bottomNavHeightPx - with(density) { 15.dp.toPx() }
 
-        // main content
-        content(
-            PaddingValues(
-                top = if (showNavBars) TopBarHeight else 0.dp,
-                bottom = BottomNavHeight,
-            ),
-        )
+        val filteredSearchSongs =
+            remember(searchQuery, searchSongs) {
+                val normalizedQuery = searchQuery.trim()
+                if (normalizedQuery.isBlank()) {
+                    searchSongs
+                } else {
+                    searchSongs.filter { song ->
+                        listOfNotNull(song.title, song.artist, song.album)
+                            .joinToString(" ")
+                            .contains(normalizedQuery, ignoreCase = true)
+                    }
+                }
+            }
 
-        // bottom navbar
-        if (showNavBars) {
-            // player surface
-            if (currentSong != null) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            // main content
+            content(
+                PaddingValues(
+                    top = if (showNavBars) TopBarHeight else 0.dp,
+                    bottom = BottomNavHeight,
+                ),
+            )
+
+            if (showNavBars) {
+                TopBar(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .zIndex(0f),
+                    onSearchClick = {
+                        scope.launch {
+                            searchOverlayVisible = true
+                            searchOverlayProgress.animateTo(1f, tween(260))
+                        }
+                    },
+                    onGoToSettings = { navController.navigate(route = "settings") },
+                )
+
+                BackHandler(enabled = searchOverlayVisible || searchOverlayProgress.value > 0.01f) {
+                    scope.launch {
+                        searchOverlayProgress.animateTo(0f, tween(220))
+                        searchOverlayVisible = false
+                    }
+                }
+
+                // player surface
+                if (currentSong != null) {
                 val progress = expandProgress.value
 
                 val topCurve = 1f
@@ -157,6 +200,7 @@ fun PlayerScaffold(
                     },
                     modifier =
                         Modifier
+                            .zIndex(3f)
                             .pointerInput(Unit) {
                                 // Use the higher level detector but track velocity manually with VelocityTracker.
                                 var velocityTracker: VelocityTracker? = null
@@ -318,18 +362,56 @@ fun PlayerScaffold(
                                 scope.launch { expandProgress.animateTo(1f, tween(120)) }
                             },
                 )
-            }
+                }
 
-            Box(
-                modifier =
-                    Modifier
-                        .align(Alignment.BottomCenter)
-                        .graphicsLayer {
-                            translationY = bottomNavHideDistancePx * expandProgress.value
-                        }
-                        .zIndex(1f),
-            ) {
-                TabsBar(navController)
+                if (searchOverlayVisible || searchOverlayProgress.value > 0.01f) {
+                    FullScreenSearchOverlay(
+                        progress = searchOverlayProgress.value,
+                        query = searchQuery,
+                        onQueryChange = { searchQuery = it },
+                        onClose = {
+                            scope.launch {
+                                searchOverlayProgress.animateTo(0f, tween(220))
+                                searchOverlayVisible = false
+                            }
+                        },
+                        items = filteredSearchSongs,
+                        itemKey = { it.id },
+                        itemTitle = { it.title },
+                        itemSubtitle = { song ->
+                            listOfNotNull(song.artist, song.album)
+                                .joinToString(" • ")
+                                .takeIf { it.isNotBlank() }
+                        },
+                        itemSearchText = { song -> listOfNotNull(song.title, song.artist, song.album).joinToString(" ") },
+                        onItemSelected = { selectedSong ->
+                            val startIndex = filteredSearchSongs.indexOfFirst { it.id == selectedSong.id }
+                            if (startIndex >= 0) {
+                                scope.launch {
+                                    searchOverlayProgress.animateTo(0f, tween(180))
+                                    searchOverlayVisible = false
+                                }
+                                playbackManager.playQueue(
+                                    queue = filteredSearchSongs.map { it.toPlaybackItem() },
+                                    startIndex = startIndex,
+                                )
+                            }
+                        },
+                        modifier = Modifier.zIndex(10f),
+                    )
+                }
+
+                Box(
+                    modifier =
+                        Modifier
+                            .align(Alignment.BottomCenter)
+                            .graphicsLayer {
+                                translationY = bottomNavHideDistancePx * expandProgress.value
+                            }
+                            .zIndex(1f),
+                ) {
+                    TabsBar(navController)
+                }
             }
         }
     }
