@@ -26,8 +26,8 @@ fun SplashScreen(
         try {
             logBackStack(navController, "SplashScreen entry")
 
-            val token = userPrefs.token.first()
-            val serverUrl = userPrefs.serverURL.first()
+            val token = userPrefs.auth.token.first()
+            val serverUrl = userPrefs.server.serverURL.first()
 
             if (token.isNullOrBlank() || serverUrl.isNullOrBlank()) {
                 Log.d("SplashScreen", "No credentials saved (token or serverUrl blank)")

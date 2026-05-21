@@ -85,8 +85,8 @@ fun LoginScreen(
     val context = LocalContext.current
     val activity = context as? Activity
 
-    val savedName by userPrefs.userName.collectAsState(initial = null)
-    val savedServerURL by userPrefs.serverURL.collectAsState(initial = null)
+    val savedName by userPrefs.server.userName.collectAsState(initial = null)
+    val savedServerURL by userPrefs.server.serverURL.collectAsState(initial = null)
 
     var tempName by remember { mutableStateOf("") }
     var tempServerURL by remember { mutableStateOf("") }
@@ -112,12 +112,12 @@ fun LoginScreen(
         scope.launch {
             val loginData = authViewModel.login(tempServerURL, tempName, tempPassword)
             if (loginData != null) {
-                userPrefs.saveUsername(tempName)
-                userPrefs.saveServerURL(tempServerURL)
-                userPrefs.savePassword(tempPassword)
-                userPrefs.saveToken(loginData.token)
-                userPrefs.saveSubsonicToken(loginData.subsonicToken)
-                loginData.subsonicSalt?.let { userPrefs.saveSubsonicSalt(it) }
+                userPrefs.server.saveUsername(tempName)
+                userPrefs.server.saveServerURL(tempServerURL)
+                userPrefs.server.savePassword(tempPassword)
+                userPrefs.auth.saveToken(loginData.token)
+                userPrefs.auth.saveSubsonicToken(loginData.subsonicToken)
+                loginData.subsonicSalt?.let { userPrefs.auth.saveSubsonicSalt(it) }
                 Toast
                     .makeText(
                         context,

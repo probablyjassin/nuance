@@ -12,8 +12,8 @@ class HomeRepository(
     private val songCacheDatabase: SongCacheDatabase,
 ) {
     suspend fun loadSongCount(): Int {
-        val token = userPrefs.token.first()
-        val serverUrl = userPrefs.serverURL.first()
+        val token = userPrefs.auth.token.first()
+        val serverUrl = userPrefs.server.serverURL.first()
 
         // Auth already validated by SplashScreen, just load song count
         val nonNullToken = token ?: throw IllegalStateException("Auth should have been validated by SplashScreen")

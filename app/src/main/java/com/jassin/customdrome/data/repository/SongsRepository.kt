@@ -63,8 +63,8 @@ class SongsRepository(
         }
 
     private suspend fun refreshSongsInternal(): List<SongUiModel> {
-        val serverUrl = userPrefs.serverURL.first()
-        val token = userPrefs.token.first()
+        val serverUrl = userPrefs.server.serverURL.first()
+        val token = userPrefs.auth.token.first()
 
         if (serverUrl.isNullOrBlank() || token.isNullOrBlank()) {
             Log.d("SongsRepository", "Cannot fetch songs: missing server URL or token")
@@ -96,10 +96,10 @@ class SongsRepository(
             return it
         }
 
-        val serverUrl = userPrefs.serverURL.first()
-        val username = userPrefs.userName.first()
-        val subsonicToken = userPrefs.subsonicToken.first()
-        val subsonicSalt = userPrefs.subsonicSalt.first()
+        val serverUrl = userPrefs.server.serverURL.first()
+        val username = userPrefs.server.userName.first()
+        val subsonicToken = userPrefs.auth.subsonicToken.first()
+        val subsonicSalt = userPrefs.auth.subsonicSalt.first()
 
         Log.d("SongsRepository", "fetchCoverArtInternal: songId=$songId serverUrl=${serverUrl?.take(60)} username=$username")
 
@@ -135,10 +135,10 @@ class SongsRepository(
     }
 
     private suspend fun getStreamUrl(songId: String): String? {
-        val serverUrl = userPrefs.serverURL.first()
-        val username = userPrefs.userName.first()
-        val subsonicToken = userPrefs.subsonicToken.first()
-        val subsonicSalt = userPrefs.subsonicSalt.first()
+        val serverUrl = userPrefs.server.serverURL.first()
+        val username = userPrefs.server.userName.first()
+        val subsonicToken = userPrefs.auth.subsonicToken.first()
+        val subsonicSalt = userPrefs.auth.subsonicSalt.first()
 
         if (
             serverUrl.isNullOrBlank() ||

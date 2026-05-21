@@ -45,7 +45,7 @@ import com.jassin.customdrome.playback.toPlaybackItem
 import com.jassin.customdrome.ui.common.SingleSongDisplay
 
 @androidx.compose.runtime.Composable
-fun Songs(
+fun SongsScreen(
     userPrefs: UserPreferences,
     listState: LazyListState,
     playbackManager: PlaybackManager,
