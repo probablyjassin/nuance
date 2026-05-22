@@ -1,6 +1,7 @@
 package com.jassin.customdrome.screens
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -8,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import com.jassin.customdrome.UserPreferences
 import com.jassin.customdrome.data.api.NavidromeApiClient
@@ -22,6 +24,7 @@ fun SplashScreen(
     navController: NavHostController,
     userPrefs: UserPreferences,
 ) {
+    val context = LocalContext.current
     LaunchedEffect(Unit) {
         try {
             logBackStack(navController, "SplashScreen entry")
@@ -31,6 +34,8 @@ fun SplashScreen(
 
             if (token.isNullOrBlank() || serverUrl.isNullOrBlank()) {
                 Log.d("SplashScreen", "No credentials saved (token or serverUrl blank)")
+                // Inform the user why they are being routed to login
+                Toast.makeText(context, "No credentials saved", Toast.LENGTH_LONG).show()
                 logBackStack(navController, "Before navigate to login (no creds)")
                 // No credentials saved -> go to login and remove splash
                 navController.navigate("login") {
@@ -61,6 +66,8 @@ fun SplashScreen(
             } else {
                 // token invalid -> clear or prompt login
                 Log.d("SplashScreen", "Auth ping failed (invalid token), navigating to login")
+                // Inform the user why they are being routed to login
+                Toast.makeText(context, "Invalid or expired token — please log in again", Toast.LENGTH_LONG).show()
                 logBackStack(navController, "Before navigate to login (auth failed)")
                 navController.navigate("login") {
                     popUpTo("splash") { inclusive = true }
