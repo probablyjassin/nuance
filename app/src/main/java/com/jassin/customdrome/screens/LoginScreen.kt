@@ -3,6 +3,9 @@ package com.jassin.customdrome.screens
 import android.app.Activity
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,12 +18,14 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dns
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -32,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.changedToDown
 import androidx.compose.ui.input.pointer.pointerInput
@@ -48,33 +54,34 @@ import com.jassin.customdrome.UserPreferences
 import com.jassin.customdrome.data.models.AuthViewModel
 import kotlinx.coroutines.launch
 
-fun Modifier.onTripleTap(onTripleTap: () -> Unit): Modifier = this.pointerInput(Unit) {
-    var tapCount = 0
-    var lastTapTime = 0L
-    val tripleTapTimeout = 300L // Milliseconds window to complete the next tap
+fun Modifier.onTripleTap(onTripleTap: () -> Unit): Modifier =
+    this.pointerInput(Unit) {
+        var tapCount = 0
+        var lastTapTime = 0L
+        val tripleTapTimeout = 300L // Milliseconds window to complete the next tap
 
-    awaitPointerEventScope {
-        while (true) {
-            val event = awaitPointerEvent(PointerEventPass.Initial)
-            val downChanged = event.changes.firstOrNull()?.changedToDown() ?: false
+        awaitPointerEventScope {
+            while (true) {
+                val event = awaitPointerEvent(PointerEventPass.Initial)
+                val downChanged = event.changes.firstOrNull()?.changedToDown() ?: false
 
-            if (downChanged) {
-                val currentTime = System.currentTimeMillis()
-                if (currentTime - lastTapTime < tripleTapTimeout) {
-                    tapCount++
-                } else {
-                    tapCount = 1
-                }
-                lastTapTime = currentTime
+                if (downChanged) {
+                    val currentTime = System.currentTimeMillis()
+                    if (currentTime - lastTapTime < tripleTapTimeout) {
+                        tapCount++
+                    } else {
+                        tapCount = 1
+                    }
+                    lastTapTime = currentTime
 
-                if (tapCount == 3) {
-                    onTripleTap()
-                    tapCount = 0 // Reset
+                    if (tapCount == 3) {
+                        onTripleTap()
+                        tapCount = 0 // Reset
+                    }
                 }
             }
         }
     }
-}
 
 @Composable
 fun LoginScreen(
@@ -87,6 +94,11 @@ fun LoginScreen(
 
     val savedName by userPrefs.server.userName.collectAsState(initial = null)
     val savedServerURL by userPrefs.server.serverURL.collectAsState(initial = null)
+
+    val savedPassword by userPrefs.server.password.collectAsState(initial = null)
+    val savedToken by userPrefs.auth.token.collectAsState(initial = null)
+    val savedSubSonicToken by userPrefs.auth.subsonicToken.collectAsState(initial = null)
+    val savedSubSonicSalt by userPrefs.auth.subsonicSalt.collectAsState(initial = null)
 
     var tempName by remember { mutableStateOf("") }
     var tempServerURL by remember { mutableStateOf("") }
@@ -163,9 +175,10 @@ fun LoginScreen(
                     label = { Text("Server URL") },
                     // This only appears once you click and the label moves up
                     placeholder = { Text("https://navidrome.int") },
-                    modifier = Modifier.fillMaxWidth().onTripleTap {
-                        tempServerURL = "https://navidrome.int"
-                    },
+                    modifier =
+                        Modifier.fillMaxWidth().onTripleTap {
+                            tempServerURL = "https://navidrome.int"
+                        },
                     singleLine = true,
                     leadingIcon = {
                         Icon(Icons.Default.Dns, contentDescription = null)
@@ -235,22 +248,73 @@ fun LoginScreen(
                 BackHandler(enabled = true) {
                     activity?.finish()
                 }
-                if (authResult != null) {
-                    Text(
-                        text = authResult ?: "",
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-                    )
+                // Collapsible "Advanced" section for debug / request information
+                var advancedExpanded by remember { mutableStateOf(false) }
+                val chevronRotation by animateFloatAsState(targetValue = if (advancedExpanded) 180f else 0f)
+
+                TextButton(onClick = { advancedExpanded = !advancedExpanded }) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Advanced", color = MaterialTheme.colorScheme.onBackground)
+                        Icon(
+                            Icons.Default.ExpandMore,
+                            contentDescription = if (advancedExpanded) "Collapse" else "Expand",
+                            modifier = Modifier.rotate(chevronRotation),
+                        )
+                    }
                 }
-                if (requestText != null) {
-                    Text(
-                        text = "Request:\n$requestText",
-                        color = MaterialTheme.colorScheme.onBackground,
+
+                AnimatedVisibility(visible = advancedExpanded) {
+                    Column(
                         modifier =
                             Modifier
                                 .fillMaxWidth()
+                                .animateContentSize()
                                 .padding(top = 12.dp),
-                    )
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        // Static lines useful for quick debugging
+                        Text(
+                            text = "Static info",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Text(
+                            text = "Saved password: ${savedPassword ?: "—"}",
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Text(
+                            text = "Saved subsonicToken: ${savedSubSonicToken ?: "—"}",
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Text(
+                            text = "Saved subsonicSalt: ${savedSubSonicSalt ?: "—"}",
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Text(
+                            text = "Saved token: ${savedToken ?: "—"}",
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+
+                        if (authResult != null) {
+                            Text(
+                                text = authResult ?: "",
+                                color = MaterialTheme.colorScheme.onBackground,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+                        if (requestText != null) {
+                            Text(
+                                text = "Request:\n$requestText",
+                                color = MaterialTheme.colorScheme.onBackground,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+                    }
                 }
             }
         }
