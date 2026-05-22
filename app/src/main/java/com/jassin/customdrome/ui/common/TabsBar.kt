@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -46,6 +47,8 @@ sealed class Screen(
 
     object Playlists : Screen("playlists", "Playlists", Icons.Default.Album)
 
+    object Artists : Screen("artists", "Artists", Icons.Default.Person)
+
     // object Settings : Screen("settings", "Settings", Icons.Default.Settings)
 }
 
@@ -56,6 +59,7 @@ fun TabsBar(navController: NavHostController) {
             Screen.Home,
             Screen.Songs,
             Screen.Playlists,
+            Screen.Artists,
             // Screen.Settings,
         )
 

@@ -19,6 +19,7 @@ import com.jassin.customdrome.data.local.CoverArtCache
 import com.jassin.customdrome.data.local.SongCacheDatabase
 import com.jassin.customdrome.data.repository.SongsRepository
 import com.jassin.customdrome.playback.PlaybackManager
+import com.jassin.customdrome.screens.ArtistsScreen
 import com.jassin.customdrome.screens.HomeScreen
 import com.jassin.customdrome.screens.LoginScreen
 import com.jassin.customdrome.screens.Playlists
@@ -124,6 +125,7 @@ fun AppNavigation(userPrefs: UserPreferences) {
             }
 
             composable(route = "playlists") { Playlists() }
+            composable(route = "artists") { ArtistsScreen() }
         }
     }
 }
