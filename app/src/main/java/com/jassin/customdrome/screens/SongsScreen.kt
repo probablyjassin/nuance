@@ -22,6 +22,8 @@ import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -138,15 +140,51 @@ fun SongsScreen(
                             IconButton(onClick = { /* TODO */ }) {
                                 Icon(Icons.Default.AutoAwesome, contentDescription = "Shuffle")
                             }
-                            AssistChip(
-                                onClick = { /* TODO: wire up sort options */ },
-                                label = { Text("Sort by") },
-                                colors =
-                                    AssistChipDefaults.assistChipColors(
-                                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                        labelColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                                    ),
-                            )
+                            val sortMenuExpanded = remember { mutableStateOf(false) }
+                            Box {
+                                AssistChip(
+                                    onClick = { sortMenuExpanded.value = true },
+                                    label = { Text("Sort by") },
+                                    colors =
+                                        AssistChipDefaults.assistChipColors(
+                                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                            labelColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                        ),
+                                )
+                                DropdownMenu(
+                                    expanded = sortMenuExpanded.value,
+                                    onDismissRequest = { sortMenuExpanded.value = false },
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text("Title") },
+                                        onClick = {
+                                            sortMenuExpanded.value = false
+                                            // TODO: implement title sort
+                                        },
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("Artist") },
+                                        onClick = {
+                                            sortMenuExpanded.value = false
+                                            // TODO: implement artist sort
+                                        },
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("Album") },
+                                        onClick = {
+                                            sortMenuExpanded.value = false
+                                            // TODO: implement album sort
+                                        },
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("Duration") },
+                                        onClick = {
+                                            sortMenuExpanded.value = false
+                                            // TODO: implement duration sort
+                                        },
+                                    )
+                                }
+                            }
                         }
                     }
 
