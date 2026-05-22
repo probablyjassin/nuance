@@ -1,5 +1,9 @@
 package com.jassin.customdrome.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +18,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
@@ -26,6 +31,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -43,6 +49,7 @@ import com.jassin.customdrome.data.repository.SongsRepository
 import com.jassin.customdrome.playback.PlaybackManager
 import com.jassin.customdrome.playback.toPlaybackItem
 import com.jassin.customdrome.ui.common.SingleSongDisplay
+import kotlinx.coroutines.launch
 
 @androidx.compose.runtime.Composable
 fun SongsScreen(
@@ -93,6 +100,8 @@ fun SongsScreen(
         }
 
         is SongsUiState.Ready -> {
+            val scope = rememberCoroutineScope()
+
             if (state.songs.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize().safeDrawingPadding(),
@@ -101,12 +110,27 @@ fun SongsScreen(
                     Text("No songs found")
                 }
             } else {
-                val songs = state.songs
+                val sortOrder by userPrefs.sorting.songSortOrder.collectAsState(initial = 1)
+                val songs = if (sortOrder == 1) state.songs.reversed() else state.songs
 
                 Column(modifier = Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = 12.dp)) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        IconButton(onClick = { /* TODO */ }) {
-                            Icon(Icons.Default.ArrowDownward, contentDescription = "Order")
+                        IconButton(onClick = {
+                            scope.launch {
+                                val newSortOrder = sortOrder xor 1
+                                userPrefs.sorting.saveSongSortOrder(newSortOrder)
+                            }
+                        }) {
+                            Icon(
+                                if (sortOrder ==
+                                    1
+                                ) {
+                                    Icons.Default.ArrowDownward
+                                } else {
+                                    Icons.Default.ArrowUpward
+                                },
+                                contentDescription = "Order",
+                            )
                         }
 
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -125,49 +149,69 @@ fun SongsScreen(
                         }
                     }
 
-                    androidx.compose.foundation.lazy.LazyColumn(
-                        state = listState,
-                        modifier = Modifier.fillMaxWidth().weight(1f),
-                        contentPadding = PaddingValues(vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    AnimatedVisibility(
+                        visible = true,
+                        enter =
+                            slideInVertically(
+                                initialOffsetY = { if (sortOrder == 1) -it else it },
+                            ),
+                        exit =
+                            slideOutVertically(
+                                targetOffsetY = { if (sortOrder == 1) it else -it },
+                            ),
                     ) {
-                        itemsIndexed(songs, key = { _, it -> it.id }) { index, song ->
-                            val shape =
-                                when {
-                                    songs.size == 1 -> RoundedCornerShape(12.dp)
-                                    index == 0 -> RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
-                                    index == songs.lastIndex -> RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp)
-                                    else -> RoundedCornerShape(0.dp)
+                        androidx.compose.foundation.lazy.LazyColumn(
+                            state = listState,
+                            modifier = Modifier.fillMaxWidth().weight(1f).animateContentSize(),
+                            contentPadding = PaddingValues(vertical = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            itemsIndexed(songs, key = { _, it -> it.id }) { index, song ->
+                                val shape =
+                                    when {
+                                        songs.size == 1 -> RoundedCornerShape(12.dp)
+                                        index == 0 -> RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
+                                        index == songs.lastIndex -> RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp)
+                                        else -> RoundedCornerShape(0.dp)
+                                    }
+
+                                val bottomPadding = if (index == songs.lastIndex) 80.dp else 0.dp
+
+                                Surface(
+                                    modifier = Modifier.fillMaxWidth().padding(bottom = bottomPadding),
+                                    shape = shape,
+                                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                                    tonalElevation = 1.dp,
+                                ) {
+                                    SingleSongDisplay(
+                                        title = song.title,
+                                        artist = song.artist,
+                                        songId = song.id,
+                                        songsRepository = songsRepository,
+                                        onClick = {
+                                            // Only enqueue 25 songs around the selected to avoid
+                                            // putting the entire library into the playback queue.
+                                            val surrounding = 25
+                                            val windowStart = (index - surrounding).coerceAtLeast(0)
+                                            val windowEnd = (index + surrounding).coerceAtMost(songs.lastIndex)
+                                            val window = songs.subList(windowStart, windowEnd + 1).map { it.toPlaybackItem() }
+
+                                            playbackManager.playQueue(
+                                                queue = window,
+                                                // Adjust start index to the position within the window
+                                                startIndex = index - windowStart,
+                                            )
+                                        },
+                                        // onLongPress = { optionsSelectedSong = song },
+                                        onCoverLoaded = { songId, coverBytes ->
+                                            val current = coverCache.value
+                                            if (!current.containsKey(songId)) {
+                                                coverCache.value = current + (songId to coverBytes)
+                                            }
+                                        },
+                                        cachedCover = coverCache.value[song.id],
+                                    )
                                 }
-
-                            val bottomPadding = if (index == songs.lastIndex) 80.dp else 0.dp
-
-                            Surface(
-                                modifier = Modifier.fillMaxWidth().padding(bottom = bottomPadding),
-                                shape = shape,
-                                color = MaterialTheme.colorScheme.surfaceContainerLow,
-                                tonalElevation = 1.dp,
-                            ) {
-                                SingleSongDisplay(
-                                    title = song.title,
-                                    artist = song.artist,
-                                    songId = song.id,
-                                    songsRepository = songsRepository,
-                                    onClick = {
-                                        playbackManager.playQueue(
-                                            queue = songs.map { it.toPlaybackItem() },
-                                            startIndex = index,
-                                        )
-                                    },
-                                    // onLongPress = { optionsSelectedSong = song },
-                                    onCoverLoaded = { songId, coverBytes ->
-                                        val current = coverCache.value
-                                        if (!current.containsKey(songId)) {
-                                            coverCache.value = current + (songId to coverBytes)
-                                        }
-                                    },
-                                    cachedCover = coverCache.value[song.id],
-                                )
                             }
                         }
                     }

@@ -3,6 +3,7 @@ package com.jassin.customdrome
 import android.content.Context
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
@@ -20,7 +21,7 @@ class UserPreferences(
         val TOKEN: Preferences.Key<String> = stringPreferencesKey("token")
         val SUBSONIC_TOKEN: Preferences.Key<String> = stringPreferencesKey("subsonic_token")
         val SUBSONIC_SALT: Preferences.Key<String> = stringPreferencesKey("subsonic_salt")
-        val SONG_SORT_ORDER: Preferences.Key<String> = stringPreferencesKey("song_sort_order")
+        val SONG_SORT_ORDER: Preferences.Key<Int> = intPreferencesKey("song_sort_order")
         val SORT_BY: Preferences.Key<String> = stringPreferencesKey("sort_by")
     }
 
@@ -71,10 +72,10 @@ class UserPreferences(
     class SortingPreferences internal constructor(
         private val context: Context,
     ) {
-        val songSortOrder: Flow<String?> = context.dataStore.data.map { it[SONG_SORT_ORDER] }
+        val songSortOrder: Flow<Int> = context.dataStore.data.map { it[SONG_SORT_ORDER] ?: 1 }
         val sortBy: Flow<String?> = context.dataStore.data.map { it[SORT_BY] }
 
-        suspend fun saveSongSortOrder(sort: String) {
+        suspend fun saveSongSortOrder(sort: Int) {
             context.dataStore.edit { it[SONG_SORT_ORDER] = sort }
         }
 
