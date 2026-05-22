@@ -21,6 +21,46 @@ data class SongDto(
     val genre: String? = null,
 )
 
+@Serializable
+data class PlaylistDto(
+    val id: String? = null,
+    val name: String? = null,
+    val comment: String? = null,
+    val duration: Double? = null,
+    val size: Int? = null,
+    val songCount: Int? = null,
+    val ownerName: String? = null,
+    val ownerId: String? = null,
+    val public: Boolean? = null,
+    val path: String? = null,
+    val sync: Boolean? = null,
+    val uploadedImage: String? = null,
+    val externalImageUrl: String? = null,
+    val createdAt: String? = null,
+    val updatedAt: String? = null,
+)
+
+@Serializable
+data class PlaylistTrackDto(
+    val id: String? = null,
+    val mediaFileId: String? = null,
+    val playlistId: String? = null,
+    val title: String? = null,
+    val artist: String? = null,
+    val album: String? = null,
+    val duration: Double? = null,
+    val bitRate: Int? = null,
+    val path: String? = null,
+    val starred: Boolean? = null,
+    val starredAt: String? = null,
+    val playCount: Int? = null,
+    val playDate: String? = null,
+    val rating: Int? = null,
+    val ratedAt: String? = null,
+    val libraryPath: String? = null,
+    val libraryName: String? = null,
+)
+
 class NavidromeApiClient {
     private val client = HttpClientProvider.client
 
@@ -152,4 +192,62 @@ class NavidromeApiClient {
         ).also {
             Log.d(TAG, "resolveStreamUrl built stream URL for songId=$songId")
         }
+
+    suspend fun fetchPlaylists(
+        serverUrl: String,
+        token: String,
+    ): List<PlaylistDto> {
+        val baseUrl = serverUrl.trimEnd('/')
+        Log.d(TAG, "fetchPlaylists -> $baseUrl/api/playlist/")
+        val response =
+            client.get("$baseUrl/api/playlist/") {
+                header("x-nd-authorization", "Bearer $token")
+            }
+
+        Log.d(TAG, "fetchPlaylists response status=${response.status}")
+        if (!response.status.isSuccess()) {
+            Log.d(TAG, "fetchPlaylists failed: ${response.status}")
+            return emptyList()
+        }
+
+        return try {
+            val playlists = response.body<List<PlaylistDto>>()
+            Log.d(TAG, "fetchPlaylists success: count=${playlists.size}")
+            playlists.forEach { p ->
+                Log.d(TAG, "  Playlist: id=${p.id}, name=${p.name}, songCount=${p.songCount}")
+            }
+            playlists
+        } catch (e: Exception) {
+            Log.e(TAG, "Error parsing playlists response", e)
+            emptyList()
+        }
+    }
+
+    suspend fun fetchPlaylistTracks(
+        serverUrl: String,
+        token: String,
+        playlistId: String,
+    ): List<PlaylistTrackDto> {
+        val baseUrl = serverUrl.trimEnd('/')
+        Log.d(TAG, "fetchPlaylistTracks -> $baseUrl/api/playlist/$playlistId/tracks")
+        val response =
+            client.get("$baseUrl/api/playlist/$playlistId/tracks") {
+                header("x-nd-authorization", "Bearer $token")
+            }
+
+        Log.d(TAG, "fetchPlaylistTracks response status for $playlistId=${response.status}")
+        if (!response.status.isSuccess()) {
+            Log.d(TAG, "fetchPlaylistTracks failed for playlistId=$playlistId: ${response.status}")
+            return emptyList()
+        }
+
+        return try {
+            val tracks = response.body<List<PlaylistTrackDto>>()
+            Log.d(TAG, "fetchPlaylistTracks success: playlistId=$playlistId count=${tracks.size}")
+            tracks
+        } catch (e: Exception) {
+            Log.e(TAG, "Error parsing playlist tracks response for playlistId=$playlistId", e)
+            emptyList()
+        }
+    }
 }

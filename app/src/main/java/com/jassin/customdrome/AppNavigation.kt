@@ -22,7 +22,7 @@ import com.jassin.customdrome.playback.PlaybackManager
 import com.jassin.customdrome.screens.ArtistsScreen
 import com.jassin.customdrome.screens.HomeScreen
 import com.jassin.customdrome.screens.LoginScreen
-import com.jassin.customdrome.screens.Playlists
+import com.jassin.customdrome.screens.PlaylistsScreen
 import com.jassin.customdrome.screens.SettingsScreen
 import com.jassin.customdrome.screens.SongsScreen
 import com.jassin.customdrome.screens.SplashScreen
@@ -124,7 +124,7 @@ fun AppNavigation(userPrefs: UserPreferences) {
                 )
             }
 
-            composable(route = "playlists") { Playlists() }
+            composable(route = "playlists") { PlaylistsScreen(userPrefs = userPrefs, songsRepository = songsRepository) }
             composable(route = "artists") { ArtistsScreen() }
         }
     }
