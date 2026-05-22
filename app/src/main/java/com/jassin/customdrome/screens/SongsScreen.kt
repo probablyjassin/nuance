@@ -2,6 +2,7 @@ package com.jassin.customdrome.screens
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Arrangement
@@ -18,7 +19,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
@@ -34,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
@@ -121,15 +122,15 @@ fun SongsScreen(
                                 userPrefs.sorting.saveSongSortOrder(newSortOrder)
                             }
                         }) {
+                            val rotationAngle by animateFloatAsState(
+                                targetValue = if (sortOrder == 1) 0f else 180f,
+                                label = "Arrow Rotation", // label just for debugging
+                            )
+
                             Icon(
-                                if (sortOrder ==
-                                    1
-                                ) {
-                                    Icons.Default.ArrowDownward
-                                } else {
-                                    Icons.Default.ArrowUpward
-                                },
+                                Icons.Default.ArrowDownward,
                                 contentDescription = "Order",
+                                modifier = Modifier.rotate(rotationAngle),
                             )
                         }
 
