@@ -41,6 +41,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jassin.customdrome.UserPreferences
 import com.jassin.customdrome.data.api.NavidromeApiClient
@@ -216,10 +217,21 @@ fun SongsScreen(
 
                                 val bottomPadding = if (index == songs.lastIndex) 80.dp else 0.dp
 
+                                val playbackState by playbackManager.state.collectAsStateWithLifecycle()
+                                val currentSong = playbackState.currentItem
+
                                 Surface(
                                     modifier = Modifier.fillMaxWidth().padding(bottom = bottomPadding),
                                     shape = shape,
-                                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                                    color = (
+                                        if (currentSong?.id ==
+                                            song.id
+                                        ) {
+                                            MaterialTheme.colorScheme.surfaceContainerHigh
+                                        } else {
+                                            MaterialTheme.colorScheme.surfaceContainerLow
+                                        }
+                                    ),
                                     tonalElevation = 1.dp,
                                 ) {
                                     SingleSongDisplay(
