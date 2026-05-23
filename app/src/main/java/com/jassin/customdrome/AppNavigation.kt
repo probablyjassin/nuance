@@ -16,7 +16,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.jassin.customdrome.data.api.NavidromeApiClient
 import com.jassin.customdrome.data.local.CoverArtCache
+import com.jassin.customdrome.data.local.PlaylistCacheDatabase
 import com.jassin.customdrome.data.local.SongCacheDatabase
+import com.jassin.customdrome.data.repository.PlaylistsRepository
 import com.jassin.customdrome.data.repository.SongsRepository
 import com.jassin.customdrome.playback.PlaybackManager
 import com.jassin.customdrome.screens.ArtistsScreen
@@ -35,6 +37,7 @@ fun AppNavigation(userPrefs: UserPreferences) {
     val context = LocalContext.current
     val apiClient = remember { NavidromeApiClient() }
     val songCacheDatabase = remember { SongCacheDatabase(context.applicationContext) }
+    val playlistCacheDatabase = remember { PlaylistCacheDatabase(context.applicationContext) }
     val coverArtCache = remember { CoverArtCache(context.applicationContext) }
     val songsRepository =
         remember(userPrefs, songCacheDatabase, coverArtCache) {
@@ -50,6 +53,11 @@ fun AppNavigation(userPrefs: UserPreferences) {
             )
         }
 
+    val playlistsRepository =
+        remember(userPrefs, playlistCacheDatabase) {
+            PlaylistsRepository(userPrefs, apiClient, playlistCacheDatabase)
+        }
+
     // keep track of current route
     // conditionally show nav elements
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -62,6 +70,7 @@ fun AppNavigation(userPrefs: UserPreferences) {
         showNavBars = showNavElements(),
         playbackManager = playbackManager,
         songsRepository = songsRepository,
+        playlistsRepository = playlistsRepository,
     ) { paddingValues ->
         NavHost(
             navController = navController,

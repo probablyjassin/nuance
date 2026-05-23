@@ -2,6 +2,8 @@
 
 package com.jassin.customdrome.screens
 
+import android.graphics.BitmapFactory
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,8 +36,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import android.graphics.BitmapFactory
-import androidx.compose.foundation.Image
 import com.jassin.customdrome.UserPreferences
 import com.jassin.customdrome.data.api.NavidromeApiClient
 import com.jassin.customdrome.data.local.PlaylistCacheDatabase
@@ -153,9 +153,10 @@ fun PlaylistsScreen(
                                                 Image(
                                                     bitmap = bitmap.asImageBitmap(),
                                                     contentDescription = "Cover art for ${playlist.name}",
-                                                    modifier = Modifier
-                                                        .size(80.dp)
-                                                        .align(Alignment.Top),
+                                                    modifier =
+                                                        Modifier
+                                                            .size(80.dp)
+                                                            .align(Alignment.Top),
                                                     contentScale = ContentScale.Crop,
                                                 )
                                             }
@@ -163,9 +164,10 @@ fun PlaylistsScreen(
                                     } else if (firstTrackId != null) {
                                         // Placeholder while loading
                                         Surface(
-                                            modifier = Modifier
-                                                .size(80.dp)
-                                                .align(Alignment.Top),
+                                            modifier =
+                                                Modifier
+                                                    .size(80.dp)
+                                                    .align(Alignment.Top),
                                             color = MaterialTheme.colorScheme.surfaceVariant,
                                             shape = RoundedCornerShape(4.dp),
                                         ) {}
@@ -173,9 +175,10 @@ fun PlaylistsScreen(
 
                                     // Playlist info on the right
                                     Column(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .weight(1f),
+                                        modifier =
+                                            Modifier
+                                                .fillMaxWidth()
+                                                .weight(1f),
                                     ) {
                                         Text(
                                             text = playlist.name,
@@ -193,13 +196,6 @@ fun PlaylistsScreen(
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         )
-                                        if (!playlist.ownerName.isNullOrBlank()) {
-                                            Text(
-                                                text = "by ${playlist.ownerName}",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            )
-                                        }
                                     }
                                 }
                             }
