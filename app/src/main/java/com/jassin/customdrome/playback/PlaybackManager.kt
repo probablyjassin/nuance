@@ -3,6 +3,7 @@ package com.jassin.customdrome.playback
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -285,8 +286,8 @@ class PlaybackManager(
     }
 
     private fun startPlaybackService() {
-        Log.d(TAG, "Starting PlaybackService via startService()")
-        context.startService(Intent(context, PlaybackService::class.java))
+        Log.d(TAG, "Starting PlaybackService via startForegroundService()")
+        ContextCompat.startForegroundService(context, Intent(context, PlaybackService::class.java))
     }
 
     private fun stopPlaybackService() {
