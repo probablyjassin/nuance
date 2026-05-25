@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "CustomDrome"
+rootProject.name = "Nuance"
 include(":app")

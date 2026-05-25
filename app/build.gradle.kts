@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.jassin.customdrome"
+    namespace = "de.jassin.nuance"
     compileSdk {
         version =
             release(36) {
@@ -14,7 +14,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.jassin.customdrome"
+        applicationId = "de.jassin.nuance"
         minSdk = 31
         targetSdk = 36
         versionCode = 1
