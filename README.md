@@ -1,7 +1,7 @@
-<div>
+<div align="center">
   <figure>
     <img src="./app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp" alt="Nuance">
-    <figcaption>This is your text title below the image</figcaption>
+    <figcaption>Nuance</figcaption>
   </figure>
 </div>
 
