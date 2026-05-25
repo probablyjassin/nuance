@@ -1,6 +1,7 @@
 <div align="center">
   <figure>
     <img src="./app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp" alt="Nuance">
+    <br>
     <figcaption>Nuance</figcaption>
   </figure>
 </div>
