@@ -25,26 +25,25 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
-    # Decode the keystore file from your GitHub Secrets
+    # 1. Decode the keystore file to the root workspace directory
     - name: Decode Keystore
       env:
         ENCODED_STRING: ${{ secrets.SIGNING_KEY_BASE64 }}
       run: |
-        # This removes any spaces or newlines before decoding
-        echo "$ENCODED_STRING" | tr -d '[:space:]' | base64 --decode > string-keystore.jks
+        echo "$ENCODED_STRING" | tr -d '[:space:]' | base64 --decode > github-keystore.jks
 
-    # Build as APK
+    # 2. Pass the secrets directly to Gradle using -P parameters
     - name: Build Release with Gradle
-      env:
-        KEYSTORE_PATH: ./string-keystore.jks  
-        KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
-        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-      run: ./gradlew assembleRelease  
+      run: |
+        ./gradlew assembleRelease \
+          -Pandroid.injected.signing.store.file=$GITHUB_WORKSPACE/github-keystore.jks \
+          -Pandroid.injected.signing.store.password="${{ secrets.KEY_STORE_PASSWORD }}" \
+          -Pandroid.injected.signing.key.alias="${{ secrets.KEY_ALIAS }}" \
+          -Pandroid.injected.signing.key.password="${{ secrets.KEY_PASSWORD }}"
 
-    # Upload artifact
+    # 3. Upload artifact (Note: path updated to grab the signed 'app-release.apk')
     - name: Upload Release Artifact
       uses: actions/upload-artifact@v4
       with:
         name: signed-app-release
-        path: app/build/outputs/apk/release/**/*.apk
+        path: app/release/app-release.apk
