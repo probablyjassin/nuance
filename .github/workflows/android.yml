@@ -36,7 +36,7 @@ jobs:
     # Build as APK
     - name: Build Release with Gradle
       env:
-        KEYSTORE_PATH: ../string-keystore.jks  
+        KEYSTORE_PATH: ./string-keystore.jks  
         KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
         KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
