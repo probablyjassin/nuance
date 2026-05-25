@@ -30,7 +30,8 @@ jobs:
       env:
         ENCODED_STRING: ${{ secrets.SIGNING_KEY_BASE64 }}
       run: |
-        echo $ENCODED_STRING | base64 --decode > string-keystore.jks
+        # This removes any spaces or newlines before decoding
+        echo "$ENCODED_STRING" | tr -d '[:space:]' | base64 --decode > string-keystore.jks
 
     # Build as APK
     - name: Build Release with Gradle
