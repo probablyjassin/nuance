@@ -1,3 +1,10 @@
+<div>
+  <figure>
+    <img src="./app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp" alt="Nuance">
+    <figcaption>This is your text title below the image</figcaption>
+  </figure>
+</div>
+
 # my attempt at my own navidrome client for android
 because I wanted one that fits my exact requirements and couldn't find one
 
