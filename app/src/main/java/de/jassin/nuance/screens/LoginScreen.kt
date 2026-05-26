@@ -24,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -94,6 +95,8 @@ fun LoginScreen(
 
     val savedName by userPrefs.server.userName.collectAsState(initial = null)
     val savedServerURL by userPrefs.server.serverURL.collectAsState(initial = null)
+
+    val savedSecureHostnames by userPrefs.server.secureHostnames.collectAsState(initial = true)
 
     val savedPassword by userPrefs.server.password.collectAsState(initial = null)
     val savedToken by userPrefs.auth.token.collectAsState(initial = null)
@@ -272,25 +275,26 @@ fun LoginScreen(
                                 .padding(top = 12.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        // Static lines useful for quick debugging
-                        Text(
-                            text = "Static info",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                        Text(
-                            text = "Saved password: ${savedPassword ?: "—"}",
-                            color = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
+                        val secureHostnamesChecked by userPrefs.server.secureHostnames.collectAsState(initial = true)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("Use secure hostname checking")
+                            Switch(
+                                checked = secureHostnamesChecked,
+                                onCheckedChange = { newValue: Boolean ->
+                                    scope.launch {
+                                        userPrefs.server.saveSecureHostnames(newValue)
+                                    }
+                                }
+                            )
+                        }
                         Text(
                             text = "Saved subsonicToken: ${savedSubSonicToken ?: "—"}",
-                            color = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                        Text(
-                            text = "Saved subsonicSalt: ${savedSubSonicSalt ?: "—"}",
                             color = MaterialTheme.colorScheme.onBackground,
                             modifier = Modifier.fillMaxWidth(),
                         )

@@ -6,6 +6,7 @@ import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
+import de.jassin.nuance.UserPreferences
 
 class PlaybackService : MediaSessionService() {
     private companion object {
@@ -16,13 +17,16 @@ class PlaybackService : MediaSessionService() {
         Log.d(TAG, "onCreate()")
         super.onCreate()
 
-        // 1. Initialize your engine and player
-        val player = PlaybackEngine.initialize(this)
+        // 1. Initialize UserPreferences
+        val userPrefs = UserPreferences(this)
 
-        // 2. Fetch the session
+        // 2. Initialize your engine and player
+        val player = PlaybackEngine.initialize(this, userPrefs)
+
+        // 3. Fetch the session
         val session = PlaybackEngine.currentSession()
 
-        // 3. CRITICAL: Add the session to the service's internal manager.
+        // 4. CRITICAL: Add the session to the service's internal manager.
         // This tells Media3 to listen to this session for background notification lifecycles!
         if (session != null) {
             addSession(session)

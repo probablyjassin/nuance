@@ -2,6 +2,7 @@ package de.jassin.nuance
 
 import android.content.Context
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -23,6 +24,7 @@ class UserPreferences(
         val SUBSONIC_SALT: Preferences.Key<String> = stringPreferencesKey("subsonic_salt")
         val SONG_SORT_ORDER: Preferences.Key<Int> = intPreferencesKey("song_sort_order")
         val SORT_BY: Preferences.Key<String> = stringPreferencesKey("sort_by")
+        val SECURE_HOSTNAMES: Preferences.Key<Boolean> = booleanPreferencesKey("secure_hostnames")
     }
 
     val server = ServerPreferences(context)
@@ -35,6 +37,7 @@ class UserPreferences(
         val userName: Flow<String?> = context.dataStore.data.map { it[USER_NAME] }
         val serverURL: Flow<String?> = context.dataStore.data.map { it[SERVER_URL] }
         val password: Flow<String?> = context.dataStore.data.map { it[PASSWORD] }
+        val secureHostnames: Flow<Boolean> = context.dataStore.data.map { it[SECURE_HOSTNAMES] ?: true}
 
         suspend fun saveUsername(name: String) {
             context.dataStore.edit { it[USER_NAME] = name }
@@ -46,6 +49,10 @@ class UserPreferences(
 
         suspend fun savePassword(password: String) {
             context.dataStore.edit { it[PASSWORD] = password }
+        }
+
+        suspend fun saveSecureHostnames(value: Boolean) {
+            context.dataStore.edit { it[SECURE_HOSTNAMES] = value }
         }
     }
 

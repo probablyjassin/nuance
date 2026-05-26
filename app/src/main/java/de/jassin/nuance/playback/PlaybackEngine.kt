@@ -1,5 +1,6 @@
 package de.jassin.nuance.playback
 
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -13,6 +14,9 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.MediaSession
 import de.jassin.nuance.MainActivity
+import de.jassin.nuance.UserPreferences
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
@@ -31,44 +35,57 @@ object PlaybackEngine {
 
     @OptIn(UnstableApi::class)
     @Synchronized
-    fun initialize(context: Context): ExoPlayer {
+    fun initialize(context: Context, userPrefs: UserPreferences): ExoPlayer {
         val existingPlayer = player
         if (existingPlayer != null) return existingPlayer
 
         val appContext = context.applicationContext
 
-        // 1. Create a trust manager that blindly trusts all certificates
-        val trustAllCerts =
-            arrayOf<TrustManager>(
-                object : X509TrustManager {
-                    override fun checkClientTrusted(
-                        chain: Array<out X509Certificate>?,
-                        authType: String?,
-                    ) {}
 
-                    override fun checkServerTrusted(
-                        chain: Array<out X509Certificate>?,
-                        authType: String?,
-                    ) {}
+        val secureHostnames = runBlocking {
+            userPrefs.server.secureHostnames.first()
+        }
 
-                    override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
-                },
-            )
+        Log.d(TAG, "Initializing ExoPlayer with secureHostnames=$secureHostnames")
 
-        val sslContext =
-            SSLContext.getInstance("SSL").apply {
-                init(null, trustAllCerts, SecureRandom())
+        // Build OkHttpClient based on security preference
+        val okHttpClient =
+            if (secureHostnames) {
+                // Standard secure client — normal TLS validation
+                OkHttpClient.Builder().build()
+            } else {
+                // Local server mode — trust all certificates
+                val trustAllCerts =
+                    arrayOf<TrustManager>(
+                        @SuppressLint("CustomX509TrustManager")
+                        object : X509TrustManager {
+                            @SuppressLint("TrustAllX509TrustManager")
+                            override fun checkClientTrusted(
+                                chain: Array<out X509Certificate>?,
+                                authType: String?,
+                            ) {}
+
+                            @SuppressLint("TrustAllX509TrustManager")
+                            override fun checkServerTrusted(
+                                chain: Array<out X509Certificate>?,
+                                authType: String?,
+                            ) {}
+
+                            override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
+                        },
+                    )
+
+                val sslContext =
+                    SSLContext.getInstance("SSL").apply {
+                        init(null, trustAllCerts, SecureRandom())
+                    }
+
+                OkHttpClient.Builder()
+                    .sslSocketFactory(sslContext.socketFactory, trustAllCerts[0] as X509TrustManager)
+                    .hostnameVerifier { _, _ -> true }
+                    .build()
             }
 
-        // 2. Build the client using the custom SSL socket factory and custom hostname verifier
-        val okHttpClient =
-            OkHttpClient
-                .Builder()
-                .sslSocketFactory(sslContext.socketFactory, trustAllCerts[0] as X509TrustManager)
-                .hostnameVerifier { _, _ -> true } // Trust internal domains and IP addresses
-                .build()
-
-        Log.d(TAG, "Initializing ExoPlayer with custom unsafe SSL OkHttpClient")
 
         val dataSourceFactory = OkHttpDataSource.Factory(okHttpClient)
         val mediaSourceFactory = DefaultMediaSourceFactory(dataSourceFactory)
@@ -85,7 +102,6 @@ object PlaybackEngine {
                             .setUsage(C.USAGE_MEDIA)
                             .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
                             .build(),
-                        // handleAudioFocus =
                         true,
                     )
                     setHandleAudioBecomingNoisy(true)
@@ -111,6 +127,7 @@ object PlaybackEngine {
 
         player = createdPlayer
         mediaSession = createdSession
+        Log.d(TAG, "ExoPlayer initialized successfully")
         return createdPlayer
     }
 
@@ -124,5 +141,6 @@ object PlaybackEngine {
         mediaSession = null
         player?.release()
         player = null
+        Log.d(TAG, "PlaybackEngine released")
     }
 }

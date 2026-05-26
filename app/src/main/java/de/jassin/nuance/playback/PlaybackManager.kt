@@ -11,12 +11,14 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import de.jassin.nuance.UserPreferences
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -25,6 +27,7 @@ class PlaybackManager(
     private val context: Context,
     private val coverFetcher: suspend (songId: String) -> ByteArray? = { null },
     private val streamUrlResolver: suspend (songId: String) -> String? = { null },
+    private val userPrefs: UserPreferences
 ) {
     private companion object {
         const val TAG = "PlaybackManager"
@@ -89,7 +92,7 @@ class PlaybackManager(
         }
 
     private val player: ExoPlayer
-        get() = PlaybackEngine.initialize(context)
+        get() = PlaybackEngine.initialize(context, userPrefs)
 
     init {
         Log.d(TAG, "PlaybackManager created")

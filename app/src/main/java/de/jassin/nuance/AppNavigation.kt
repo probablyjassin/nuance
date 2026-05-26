@@ -73,6 +73,7 @@ fun AppNavigation(userPrefs: UserPreferences) {
                 context = context.applicationContext,
                 coverFetcher = { id -> songsRepository.getCoverArtQueued(id) },
                 streamUrlResolver = { id -> songsRepository.getStreamUrlQueued(id) },
+                userPrefs = userPrefs
             )
         }
 
