@@ -1,14 +1,11 @@
 package de.jassin.nuance.playback
 
-import android.app.PendingIntent
 import android.content.Intent
 import android.util.Log
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
-import de.jassin.nuance.MainActivity
-import kotlin.jvm.java
 
 class PlaybackService : MediaSessionService() {
     private companion object {
@@ -37,24 +34,6 @@ class PlaybackService : MediaSessionService() {
         Log.d(TAG, "onGetSession() from controller=${controllerInfo.packageName}")
 
         val session = PlaybackEngine.currentSession()
-
-        // OPTIONAL BUT RECOMMENDED: Set a single-top activity intent on the session.
-        // This ensures that when a user taps the background of the system notification,
-        // it cleanly opens your MainActivity instead of launching a duplicate instance.
-        if (session?.sessionActivity == null) {
-            val intent =
-                Intent(this, MainActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                }
-            val pendingIntent =
-                PendingIntent.getActivity(
-                    this,
-                    0,
-                    intent,
-                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
-                )
-            session?.setSessionActivity(pendingIntent)
-        }
 
         return session
     }
