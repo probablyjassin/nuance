@@ -12,6 +12,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
     steps:
     - uses: actions/checkout@v4
 
@@ -47,3 +50,13 @@ jobs:
       with:
         name: signed-app-release
         path: app/build/outputs/apk/release/app-release.apk
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        tag_name: ${{ github.ref_name }}
+        name: Release ${{ github.ref_name }}
+        files: app/build/outputs/apk/release/app-release.apk
+        draft: false
+        prerelease: false
