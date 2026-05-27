@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.first
 fun SplashScreen(
     navController: NavHostController,
     userPrefs: UserPreferences,
+    apiClient: NavidromeApiClient,
 ) {
     val context = LocalContext.current
     LaunchedEffect(Unit) {
@@ -46,7 +47,6 @@ fun SplashScreen(
             }
 
             Log.d("SplashScreen", "Token and URL found, pinging auth: url=$serverUrl")
-            val apiClient = NavidromeApiClient()
             val ok =
                 try {
                     apiClient.pingAuth(serverUrl, token)
@@ -86,7 +86,7 @@ fun SplashScreen(
     }
 
     // screen content (only briefly visible)
-    Box(Modifier.Companion.fillMaxSize(), contentAlignment = Alignment.Companion.Center) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         CircularProgressIndicator()
     }
 }

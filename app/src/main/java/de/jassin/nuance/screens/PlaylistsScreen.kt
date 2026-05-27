@@ -49,12 +49,12 @@ import kotlinx.coroutines.launch
 fun PlaylistsScreen(
     userPrefs: UserPreferences? = null,
     songsRepository: SongsRepository? = null,
+    apiClient: NavidromeApiClient,
 ) {
     val context = LocalContext.current
-    val apiClient = remember { NavidromeApiClient() }
     val playlistCacheDatabase = remember { PlaylistCacheDatabase(context.applicationContext) }
     val playlistsRepository =
-        remember(userPrefs, playlistCacheDatabase) {
+        remember(userPrefs, apiClient, playlistCacheDatabase) {
             PlaylistsRepository(userPrefs!!, apiClient, playlistCacheDatabase)
         }
 

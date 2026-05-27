@@ -25,15 +25,13 @@ import de.jassin.nuance.data.repository.HomeRepository
 
 @Composable
 fun HomeScreen(
-    onNavigateToLogin: () -> Unit,
     userPrefs: UserPreferences,
+    apiClient: NavidromeApiClient,
 ) {
     val context = LocalContext.current
 
-    // ...existing code...
-    val apiClient = remember { NavidromeApiClient() }
     val songCacheDatabase = remember { SongCacheDatabase(context.applicationContext) }
-    val homeRepository = remember(userPrefs, songCacheDatabase) { HomeRepository(userPrefs, apiClient, songCacheDatabase) }
+    val homeRepository = remember(userPrefs, apiClient, songCacheDatabase) { HomeRepository(userPrefs, apiClient, songCacheDatabase) }
 
     val vm: HomeScreenViewModel =
         viewModel(
@@ -46,7 +44,6 @@ fun HomeScreen(
 
     val songCount by vm.songCount.collectAsState()
     val isLoading by vm.isLoading.collectAsState()
-    val toastMessage by vm.toastMessage.collectAsState()
 
     LaunchedEffect(Unit) { vm.loadHome() }
 

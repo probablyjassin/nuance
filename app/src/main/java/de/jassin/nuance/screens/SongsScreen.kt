@@ -60,13 +60,13 @@ fun SongsScreen(
     userPrefs: UserPreferences,
     listState: LazyListState,
     playbackManager: PlaybackManager,
+    apiClient: NavidromeApiClient,
 ) {
     val context = LocalContext.current
-    val apiClient = remember { NavidromeApiClient() }
     val songCacheDatabase = remember { SongCacheDatabase(context.applicationContext) }
     val coverArtCache = remember { CoverArtCache(context.applicationContext) }
     val songsRepository =
-        remember(userPrefs, songCacheDatabase, coverArtCache) {
+        remember(userPrefs, apiClient, songCacheDatabase, coverArtCache) {
             SongsRepository(userPrefs, apiClient, songCacheDatabase, coverArtCache)
         }
 

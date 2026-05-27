@@ -14,6 +14,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import de.jassin.nuance.data.api.HttpClientProvider
 import de.jassin.nuance.data.api.NavidromeApiClient
 import de.jassin.nuance.data.local.CoverArtCache
 import de.jassin.nuance.data.local.PlaylistCacheDatabase
@@ -35,10 +36,9 @@ import de.jassin.nuance.ui.features.PlayerScaffold
 fun AppNavigation(userPrefs: UserPreferences) {
     val navController = rememberNavController()
     val context = LocalContext.current
-    val apiClient =
-        remember {
-            NavidromeApiClient()
-        }
+    val secureHostnames by userPrefs.server.secureHostnames.collectAsState(initial = true)
+    val httpClient = remember(secureHostnames) { HttpClientProvider.create(secureHostnameChecking = secureHostnames) }
+    val apiClient = remember(httpClient) { NavidromeApiClient(httpClient) }
     val songCacheDatabase =
         remember {
             SongCacheDatabase(
@@ -58,7 +58,7 @@ fun AppNavigation(userPrefs: UserPreferences) {
             )
         }
     val songsRepository =
-        remember(userPrefs, songCacheDatabase, coverArtCache) {
+        remember(userPrefs, apiClient, songCacheDatabase, coverArtCache) {
             SongsRepository(
                 userPrefs,
                 apiClient,
@@ -78,7 +78,7 @@ fun AppNavigation(userPrefs: UserPreferences) {
         }
 
     val playlistsRepository =
-        remember(userPrefs, playlistCacheDatabase) {
+        remember(userPrefs, apiClient, playlistCacheDatabase) {
             PlaylistsRepository(
                 userPrefs,
                 apiClient,
@@ -109,15 +109,14 @@ fun AppNavigation(userPrefs: UserPreferences) {
                 SplashScreen(
                     navController = navController,
                     userPrefs = userPrefs,
+                    apiClient = apiClient,
                 )
             }
 
             composable("home") {
                 HomeScreen(
-                    onNavigateToLogin = {
-                        navController.navigate("login")
-                    },
                     userPrefs = userPrefs,
+                    apiClient = apiClient,
                 )
             }
 
@@ -132,6 +131,7 @@ fun AppNavigation(userPrefs: UserPreferences) {
                         navController.popBackStack()
                     },
                     userPrefs = userPrefs,
+                    httpClient = httpClient,
                 )
             }
 
@@ -161,6 +161,7 @@ fun AppNavigation(userPrefs: UserPreferences) {
                     userPrefs = userPrefs,
                     listState = listState,
                     playbackManager = playbackManager,
+                    apiClient = apiClient,
                 )
             }
 
@@ -168,6 +169,7 @@ fun AppNavigation(userPrefs: UserPreferences) {
                 PlaylistsScreen(
                     userPrefs = userPrefs,
                     songsRepository = songsRepository,
+                    apiClient = apiClient,
                 )
             }
             composable(route = "artists") {

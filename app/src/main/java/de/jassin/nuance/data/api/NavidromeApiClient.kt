@@ -3,6 +3,7 @@
 package de.jassin.nuance.data.api
 
 import android.util.Log
+import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -61,8 +62,9 @@ data class PlaylistTrackDto(
     val libraryName: String? = null,
 )
 
-class NavidromeApiClient {
-    private val client = _root_ide_package_.de.jassin.nuance.data.api.HttpClientProvider.client
+class NavidromeApiClient(
+    private val client: HttpClient,
+) {
 
     private companion object {
         const val TAG = "NavidromeApiClient"
@@ -96,7 +98,7 @@ class NavidromeApiClient {
     suspend fun fetchSongs(
         serverUrl: String,
         token: String,
-    ): List<de.jassin.nuance.data.api.SongDto> {
+    ): List<SongDto> {
         val baseUrl = serverUrl.trimEnd('/')
         Log.d(TAG, "fetchSongs -> $baseUrl/api/song")
         val response =
@@ -110,7 +112,7 @@ class NavidromeApiClient {
         }
 
         return try {
-            val songs = response.body<List<de.jassin.nuance.data.api.SongDto>>()
+            val songs = response.body<List<SongDto>>()
             Log.d(TAG, "fetchSongs success: count=${songs.size}")
             songs
         } catch (e: Exception) {
@@ -168,7 +170,7 @@ class NavidromeApiClient {
         }
     }
 
-    suspend fun resolveStreamUrl(
+    fun resolveStreamUrl(
         serverUrl: String,
         username: String,
         subsonicToken: String,
@@ -196,7 +198,7 @@ class NavidromeApiClient {
     suspend fun fetchPlaylists(
         serverUrl: String,
         token: String,
-    ): List<de.jassin.nuance.data.api.PlaylistDto> {
+    ): List<PlaylistDto> {
         val baseUrl = serverUrl.trimEnd('/')
         Log.d(TAG, "fetchPlaylists -> $baseUrl/api/playlist/")
         val response =

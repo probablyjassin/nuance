@@ -11,45 +11,44 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.X509TrustManager
 
 object HttpClientProvider {
-    // singleton http client so that we use the same settings everywhere
-    // ignore ssl errors and allow http
-    val client: HttpClient =
-        HttpClient(OkHttp) {
-            engine {
-                config {
-                    // don't verify certificates
-                    val trustAllCerts =
-                        object : X509TrustManager {
-                            override fun checkClientTrusted(
-                                p0: Array<X509Certificate>,
-                                p1: String,
-                            ) {}
+    @Suppress("unused")
+    fun create(secureHostnameChecking: Boolean = true): HttpClient =
+        if (!secureHostnameChecking) {
+            HttpClient(OkHttp) {
+                engine {
+                    config {
+                        val trustAllCerts =
+                            object : X509TrustManager {
+                                override fun checkClientTrusted(
+                                    p0: Array<X509Certificate>,
+                                    p1: String,
+                                ) {}
 
-                            override fun checkServerTrusted(
-                                chain: Array<out X509Certificate>?,
-                                authType: String?,
-                            ) {}
+                                override fun checkServerTrusted(
+                                    chain: Array<out X509Certificate>?,
+                                    authType: String?,
+                                ) {}
 
-                            override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
-                        }
+                                override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
+                            }
 
-                    // all-trusting trust manager
-                    val sslContext = SSLContext.getInstance("SSL")
-                    sslContext.init(null, arrayOf(trustAllCerts), SecureRandom())
+                        val sslContext = SSLContext.getInstance("SSL")
+                        sslContext.init(null, arrayOf(trustAllCerts), SecureRandom())
 
-                    sslSocketFactory(sslContext.socketFactory, trustAllCerts)
+                        sslSocketFactory(sslContext.socketFactory, trustAllCerts)
+                        hostnameVerifier { _, _ -> true }
+                    }
+                }
 
-                    // ignore hostname verification
-                    hostnameVerifier { _, _ -> true }
+                install(ContentNegotiation) {
+                    json(Json { ignoreUnknownKeys = true })
                 }
             }
-
-            install(ContentNegotiation) {
-                json(Json { ignoreUnknownKeys = true })
+        } else {
+            HttpClient(OkHttp) {
+                install(ContentNegotiation) {
+                    json(Json { ignoreUnknownKeys = true })
+                }
             }
         }
-
-    fun close() {
-        client.close()
-    }
 }

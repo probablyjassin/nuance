@@ -1,7 +1,7 @@
 package de.jassin.nuance.data.models
 
 import androidx.lifecycle.ViewModel
-import de.jassin.nuance.data.api.HttpClientProvider
+import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -29,8 +29,9 @@ private data class LoginPayload(
     val password: String,
 )
 
-class AuthViewModel : ViewModel() {
-    private val client = HttpClientProvider.client
+class AuthViewModel(
+    private val client: HttpClient,
+) : ViewModel() {
 
     private val _result = MutableStateFlow<String?>(null)
     val result: StateFlow<String?> = _result

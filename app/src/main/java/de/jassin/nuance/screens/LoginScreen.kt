@@ -50,9 +50,12 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.jassin.nuance.UserPreferences
 import de.jassin.nuance.data.models.AuthViewModel
+import io.ktor.client.HttpClient
 import kotlinx.coroutines.launch
 
 fun Modifier.onTripleTap(onTripleTap: () -> Unit): Modifier =
@@ -89,6 +92,7 @@ fun LoginScreen(
     onLogin: () -> Unit,
     onBack: () -> Unit,
     userPrefs: UserPreferences,
+    httpClient: HttpClient,
 ) {
     val context = LocalContext.current
     val activity = context as? Activity
@@ -98,10 +102,8 @@ fun LoginScreen(
 
     val savedSecureHostnames by userPrefs.server.secureHostnames.collectAsState(initial = true)
 
-    val savedPassword by userPrefs.server.password.collectAsState(initial = null)
     val savedToken by userPrefs.auth.token.collectAsState(initial = null)
     val savedSubSonicToken by userPrefs.auth.subsonicToken.collectAsState(initial = null)
-    val savedSubSonicSalt by userPrefs.auth.subsonicSalt.collectAsState(initial = null)
 
     var tempName by remember { mutableStateOf("") }
     var tempServerURL by remember { mutableStateOf("") }
@@ -117,7 +119,20 @@ fun LoginScreen(
     }
     val scope = rememberCoroutineScope()
 
-    val authViewModel: AuthViewModel = viewModel() // default construction
+    val authViewModel: AuthViewModel =
+        viewModel(
+            key = "auth_$savedSecureHostnames",
+            factory =
+                object : ViewModelProvider.Factory {
+                    @Suppress("UNCHECKED_CAST")
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        if (modelClass.isAssignableFrom(AuthViewModel::class.java)) {
+                            return AuthViewModel(httpClient) as T
+                        }
+                        throw IllegalArgumentException("Unknown ViewModel class")
+                    }
+                },
+        )
     val authResult by authViewModel.result.collectAsState()
     val requestText by authViewModel.request.collectAsState()
 
