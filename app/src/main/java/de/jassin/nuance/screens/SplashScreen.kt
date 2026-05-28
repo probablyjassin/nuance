@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -26,7 +28,10 @@ fun SplashScreen(
     apiClient: NavidromeApiClient,
 ) {
     val context = LocalContext.current
-    LaunchedEffect(Unit) {
+    val secureHostnames by userPrefs.server.secureHostnames.collectAsState(initial = null)
+
+    LaunchedEffect(secureHostnames) {
+        if (secureHostnames == null) return@LaunchedEffect
         try {
             logBackStack(navController, "SplashScreen entry")
 
@@ -52,6 +57,7 @@ fun SplashScreen(
                     apiClient.pingAuth(serverUrl, token)
                 } catch (e: Exception) {
                     Log.w("SplashScreen", "pingAuth failed", e)
+                    Toast.makeText(context, e.message, Toast.LENGTH_LONG).show()
                     false
                 }
 

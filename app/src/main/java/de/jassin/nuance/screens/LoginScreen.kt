@@ -300,7 +300,7 @@ fun LoginScreen(
                         ) {
                             Text("Use secure hostname checking")
                             Switch(
-                                checked = secureHostnamesChecked,
+                                checked = secureHostnamesChecked == true,
                                 onCheckedChange = { newValue: Boolean ->
                                     scope.launch {
                                         userPrefs.server.saveSecureHostnames(newValue)

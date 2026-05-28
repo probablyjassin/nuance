@@ -50,7 +50,7 @@ object PlaybackEngine {
 
         // Build OkHttpClient based on security preference
         val okHttpClient =
-            if (secureHostnames) {
+            if (secureHostnames == true) {
                 // Standard secure client — normal TLS validation
                 OkHttpClient.Builder().build()
             } else {

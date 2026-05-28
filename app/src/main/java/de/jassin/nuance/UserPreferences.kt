@@ -37,7 +37,7 @@ class UserPreferences(
         val userName: Flow<String?> = context.dataStore.data.map { it[USER_NAME] }
         val serverURL: Flow<String?> = context.dataStore.data.map { it[SERVER_URL] }
         val password: Flow<String?> = context.dataStore.data.map { it[PASSWORD] }
-        val secureHostnames: Flow<Boolean> = context.dataStore.data.map { it[SECURE_HOSTNAMES] ?: true}
+        val secureHostnames: Flow<Boolean?> = context.dataStore.data.map { it[SECURE_HOSTNAMES] ?: true}
 
         suspend fun saveUsername(name: String) {
             context.dataStore.edit { it[USER_NAME] = name }

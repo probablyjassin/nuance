@@ -37,7 +37,7 @@ fun AppNavigation(userPrefs: UserPreferences) {
     val navController = rememberNavController()
     val context = LocalContext.current
     val secureHostnames by userPrefs.server.secureHostnames.collectAsState(initial = true)
-    val httpClient = remember(secureHostnames) { HttpClientProvider.create(secureHostnameChecking = secureHostnames) }
+    val httpClient = remember(secureHostnames) { HttpClientProvider.create(secureHostnameChecking = secureHostnames == true) }
     val apiClient = remember(httpClient) { NavidromeApiClient(httpClient) }
     val songCacheDatabase =
         remember {
